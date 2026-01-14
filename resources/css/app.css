@@ -1,0 +1,85 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Estilos personalizados del proyecto */
+
+@layer base {
+    body {
+        @apply bg-gray-50 text-gray-900;
+    }
+}
+
+@layer components {
+    /* Botones personalizados */
+    .btn-primary {
+        @apply inline-flex items-center px-4 py-2 bg-primary-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-primary-700 focus:bg-primary-700 active:bg-primary-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition ease-in-out duration-150;
+    }
+
+    .btn-secondary {
+        @apply inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-25 transition ease-in-out duration-150;
+    }
+
+    .btn-danger {
+        @apply inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700 focus:bg-red-700 active:bg-red-900 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition ease-in-out duration-150;
+    }
+
+    /* Cards */
+    .card {
+        @apply bg-white overflow-hidden shadow-sm sm:rounded-lg;
+    }
+
+    .card-body {
+        @apply p-6 text-gray-900;
+    }
+
+    /* Formularios */
+    .form-label {
+        @apply block font-medium text-sm text-gray-700;
+    }
+
+    .form-input {
+        @apply border-gray-300 focus:border-primary-500 focus:ring-primary-500 rounded-md shadow-sm;
+    }
+
+    .form-error {
+        @apply text-sm text-red-600 mt-1;
+    }
+
+    /* Badges */
+    .badge {
+        @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+    }
+
+    .badge-primary {
+        @apply bg-primary-100 text-primary-800;
+    }
+
+    .badge-success {
+        @apply bg-green-100 text-green-800;
+    }
+
+    .badge-warning {
+        @apply bg-yellow-100 text-yellow-800;
+    }
+
+    .badge-danger {
+        @apply bg-red-100 text-red-800;
+    }
+
+    .badge-info {
+        @apply bg-blue-100 text-blue-800;
+    }
+}
+
+@layer utilities {
+    /* Utilidades personalizadas */
+    .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+
+    .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+    }
+}
