@@ -21,6 +21,9 @@
                     <x-nav-link :href="route('teams.index')" :active="request()->routeIs('teams.*')">
                         {{ __('Equipos') }}
                     </x-nav-link>
+                    <x-nav-link :href="route('projects.index')" :active="request()->routeIs('projects.*')">
+                        {{ __('Proyectos') }}
+                    </x-nav-link>
                     <!-- Aquí se agregarán más enlaces en módulos posteriores -->
                 </div>
             </div>
@@ -79,6 +82,9 @@
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('teams.index')" :active="request()->routeIs('teams.*')">
                 {{ __('Equipos') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('projects.index')" :active="request()->routeIs('projects.*')">
+                {{ __('Proyectos') }}
             </x-responsive-nav-link>
         </div>
 

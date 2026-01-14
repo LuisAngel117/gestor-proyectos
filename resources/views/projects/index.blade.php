@@ -1,0 +1,159 @@
+@extends('layouts.app')
+
+@section('title', 'Proyectos')
+
+@section('content')
+<x-slot name="header">
+    <div class="flex justify-between items-center">
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+            {{ __('Proyectos') }}
+        </h2>
+        <a href="{{ route('projects.create') }}" class="btn-primary">
+            <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            Nuevo Proyecto
+        </a>
+    </div>
+</x-slot>
+
+<div class="space-y-6">
+    <!-- Filtros por equipo -->
+    <div class="card">
+        <div class="card-body">
+            <h3 class="text-sm font-semibold text-gray-700 mb-3">Filtrar por equipo</h3>
+            <div class="flex flex-wrap gap-2">
+                <a href="{{ route('projects.index') }}"
+                   class="px-4 py-2 rounded-lg text-sm font-medium transition {{ !$teamId ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}">
+                    Todos
+                </a>
+                @foreach($userTeams as $team)
+                <a href="{{ route('projects.index', ['team' => $team->id]) }}"
+                   class="px-4 py-2 rounded-lg text-sm font-medium transition {{ $teamId == $team->id ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}">
+                    {{ $team->name }}
+                </a>
+                @endforeach
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de proyectos -->
+    @if($projects->count() > 0)
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        @foreach($projects as $project)
+        <div class="card hover:shadow-lg transition">
+            <div class="card-body">
+                <!-- Header del proyecto -->
+                <div class="flex items-start justify-between mb-3">
+                    <div class="flex-1">
+                        <h3 class="font-semibold text-lg text-gray-900 mb-1">
+                            <a href="{{ route('projects.show', $project) }}" class="hover:text-primary-600">
+                                {{ $project->name }}
+                            </a>
+                        </h3>
+                        <p class="text-xs text-gray-500">
+                            <svg class="w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                            </svg>
+                            {{ $project->team->name }}
+                        </p>
+                    </div>
+                    <span class="badge badge-{{ $project->priority_color }}">
+                        {{ $project->priority_label }}
+                    </span>
+                </div>
+
+                <!-- Descripción -->
+                <p class="text-sm text-gray-600 mb-4 line-clamp-2">
+                    {{ $project->description ?? 'Sin descripción' }}
+                </p>
+
+                <!-- Estado y métricas -->
+                <div class="flex items-center justify-between mb-4">
+                    <span class="badge badge-{{ $project->status_color }}">
+                        {{ $project->status_label }}
+                    </span>
+                    <div class="flex items-center space-x-3 text-xs text-gray-500">
+                        <span class="flex items-center">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                            </svg>
+                            {{ $project->members->count() }}
+                        </span>
+                        @if($project->estimated_hours)
+                        <span class="flex items-center">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            {{ $project->estimated_hours }}h
+                        </span>
+                        @endif
+                    </div>
+                </div>
+
+                <!-- Fechas -->
+                @if($project->start_date || $project->due_date)
+                <div class="text-xs text-gray-500 mb-4">
+                    @if($project->start_date)
+                    <div class="flex items-center">
+                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                        Inicio: {{ $project->start_date->format('d/m/Y') }}
+                    </div>
+                    @endif
+                    @if($project->due_date)
+                    <div class="flex items-center {{ $project->isOverdue() ? 'text-red-600 font-semibold' : '' }}">
+                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                        Entrega: {{ $project->due_date->format('d/m/Y') }}
+                        @if($project->isOverdue())
+                        <span class="ml-1">(Vencido)</span>
+                        @endif
+                    </div>
+                    @endif
+                </div>
+                @endif
+
+                <!-- Acciones -->
+                <div class="flex space-x-2 pt-3 border-t">
+                    <a href="{{ route('projects.show', $project) }}" class="btn-secondary text-xs py-1 px-3">
+                        Ver
+                    </a>
+                    @can('update', $project)
+                    <a href="{{ route('projects.edit', $project) }}" class="btn-secondary text-xs py-1 px-3">
+                        Editar
+                    </a>
+                    @endcan
+                </div>
+            </div>
+        </div>
+        @endforeach
+    </div>
+
+    <!-- Paginación -->
+    <div class="mt-6">
+        {{ $projects->links() }}
+    </div>
+    @else
+    <!-- Sin proyectos -->
+    <div class="card">
+        <div class="card-body text-center py-12">
+            <svg class="mx-auto h-24 w-24 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+            </svg>
+            <h3 class="mt-6 text-lg font-semibold text-gray-900">No hay proyectos disponibles</h3>
+            <p class="mt-2 text-sm text-gray-600">
+                {{ $teamId ? 'Este equipo no tiene proyectos aún.' : 'No tienes proyectos en ninguno de tus equipos.' }}
+            </p>
+            <div class="mt-6">
+                <a href="{{ route('projects.create') }}" class="btn-primary">
+                    Crear primer proyecto
+                </a>
+            </div>
+        </div>
+    </div>
+    @endif
+</div>
+@endsection
