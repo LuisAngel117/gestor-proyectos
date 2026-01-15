@@ -180,12 +180,22 @@
                         </select>
                         <button type="submit" class="btn-secondary text-sm" @disabled($project->members->where('pivot.role', '!=', 'owner')->isEmpty())>Transferir</button>
                     </form>
-                    <button class="btn-primary text-sm">
-                        <svg class="w-4 h-4 mr-1 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                        </svg>
-                        Agregar Miembro
-                    </button>
+                    <form method="POST" action="{{ route('projects.members.store', $project) }}" class="flex items-center gap-2">
+                        @csrf
+                        <label for="new_member" class="text-sm text-gray-600">Agregar miembro</label>
+                        <select
+                            id="new_member"
+                            name="user_id"
+                            class="form-input text-sm"
+                            @disabled($availableMembers->isEmpty())
+                        >
+                            @foreach($availableMembers as $member)
+                                <option value="{{ $member->id }}">{{ $member->full_name }}</option>
+                            @endforeach
+                        </select>
+                        <input type="hidden" name="role" value="member">
+                        <button type="submit" class="btn-primary text-sm" @disabled($availableMembers->isEmpty())>Agregar</button>
+                    </form>
                 </div>
                 @endcan
             </div>
@@ -247,7 +257,11 @@
                             @can('manageMembers', $project)
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                 @if($member->pivot->role !== 'owner')
-                                <button class="text-red-600 hover:text-red-900">Eliminar</button>
+                                    <form method="POST" action="{{ route('projects.members.destroy', [$project, $member]) }}">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="text-red-600 hover:text-red-900">Eliminar</button>
+                                    </form>
                                 @endif
                             </td>
                             @endcan

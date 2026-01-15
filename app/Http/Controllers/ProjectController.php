@@ -131,7 +131,14 @@ class ProjectController extends Controller
 
         $project->load(['team.users', 'creator', 'members', 'sprints']);
 
-        return view('projects.show', compact('project'));
+        $availableMembers = $project->team->users
+            ->filter(fn ($user) => !$project->members->contains($user))
+            ->sortBy('name');
+
+        return view('projects.show', [
+            'project' => $project,
+            'availableMembers' => $availableMembers,
+        ]);
     }
 
     /**
