@@ -4,6 +4,8 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\BacklogItemController;
 use App\Http\Controllers\ProjectMemberController;
 use App\Http\Controllers\ProjectOwnershipController;
+use App\Http\Controllers\SprintController;
+use App\Http\Controllers\SprintPlanningController;
 use Illuminate\Support\Facades\Route;
 
 /*

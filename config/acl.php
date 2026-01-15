@@ -27,6 +27,8 @@ return [
         'comment',
         'manageMembers',
         'transferOwnership',
+        'plan',
+        'reorderBacklog',
         'manageDependencies',
         'registerTime',
         'attachFiles',
