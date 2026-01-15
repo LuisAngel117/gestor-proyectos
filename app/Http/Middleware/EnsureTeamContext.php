@@ -46,9 +46,22 @@ class EnsureTeamContext
 
     private function resolveTeamCandidate(Request $request): ?Team
     {
+        $projectParam = $request->route('project');
+        if ($projectParam) {
+            $project = $projectParam instanceof Project ? $projectParam : Project::find($projectParam);
+            if ($project) {
+                return $project->team;
+            }
+        }
+
         $teamParam = $request->route('team');
         if ($teamParam) {
             return $teamParam instanceof Team ? $teamParam : Team::find($teamParam);
+        }
+
+        $teamQuery = $request->query('team');
+        if ($teamQuery) {
+            return Team::find($teamQuery);
         }
 
         $teamId = TeamContext::get();
