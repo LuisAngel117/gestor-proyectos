@@ -48,22 +48,12 @@ class EnsureTeamContext
     {
         $teamParam = $request->route('team');
         if ($teamParam) {
-            $team = $teamParam instanceof Team ? $teamParam : Team::find($teamParam);
-            if (!$team) {
-                abort(403);
-            }
-
-            return $team;
+            return $teamParam instanceof Team ? $teamParam : Team::find($teamParam);
         }
 
         $teamId = TeamContext::get();
         if ($teamId) {
-            $team = Team::find($teamId);
-            if (!$team) {
-                abort(403);
-            }
-
-            return $team;
+            return Team::find($teamId);
         }
 
         $user = $request->user();
