@@ -55,23 +55,6 @@ Route::middleware('auth')->group(function () {
 
         Route::post('projects/{project}/ownership', [ProjectOwnershipController::class, 'store'])
             ->name('projects.ownership.transfer');
-
-        Route::scopeBindings()->group(function () {
-            Route::get('projects/{project}/backlog', [\App\Http\Controllers\BacklogItemController::class, 'index'])
-                ->name('backlog.index');
-            Route::get('projects/{project}/backlog/create', [\App\Http\Controllers\BacklogItemController::class, 'create'])
-                ->name('backlog.create');
-            Route::post('projects/{project}/backlog', [\App\Http\Controllers\BacklogItemController::class, 'store'])
-                ->name('backlog.store');
-            Route::get('projects/{project}/backlog/{backlogItem}/edit', [\App\Http\Controllers\BacklogItemController::class, 'edit'])
-                ->name('backlog.edit');
-            Route::put('projects/{project}/backlog/{backlogItem}', [\App\Http\Controllers\BacklogItemController::class, 'update'])
-                ->name('backlog.update');
-            Route::delete('projects/{project}/backlog/{backlogItem}', [\App\Http\Controllers\BacklogItemController::class, 'destroy'])
-                ->name('backlog.destroy');
-            Route::post('projects/{project}/backlog/reorder', [\App\Http\Controllers\BacklogItemController::class, 'reorder'])
-                ->name('backlog.reorder');
-        });
     });
 });
 
