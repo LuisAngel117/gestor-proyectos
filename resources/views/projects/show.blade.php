@@ -150,15 +150,35 @@
     <!-- Miembros del proyecto -->
     <div class="card">
         <div class="card-body">
-            <div class="flex justify-between items-center mb-4">
+            <div class="flex flex-wrap justify-between items-center gap-3 mb-4">
                 <h3 class="text-lg font-semibold text-gray-900">Miembros del Proyecto</h3>
                 @can('manageMembers', $project)
-                <button class="btn-primary text-sm">
-                    <svg class="w-4 h-4 mr-1 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                    </svg>
-                    Agregar Miembro
-                </button>
+                <div class="flex flex-wrap items-center gap-3">
+                    <form method="POST" action="{{ route('projects.transfer-owner', $project) }}" class="flex items-center gap-2">
+                        @csrf
+                        @method('PATCH')
+                        <label for="new_owner" class="text-sm text-gray-600">Transferir owner</label>
+                        <select
+                            id="new_owner"
+                            name="user_id"
+                            class="form-input text-sm"
+                            @disabled($project->members->where('pivot.role', '!=', 'owner')->isEmpty())
+                        >
+                            @foreach($project->members as $member)
+                                @if($member->pivot->role !== 'owner')
+                                    <option value="{{ $member->id }}">{{ $member->full_name }}</option>
+                                @endif
+                            @endforeach
+                        </select>
+                        <button type="submit" class="btn-secondary text-sm" @disabled($project->members->where('pivot.role', '!=', 'owner')->isEmpty())>Transferir</button>
+                    </form>
+                    <button class="btn-primary text-sm">
+                        <svg class="w-4 h-4 mr-1 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        </svg>
+                        Agregar Miembro
+                    </button>
+                </div>
                 @endcan
             </div>
 
