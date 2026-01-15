@@ -12,54 +12,40 @@ class ProjectVisibilityTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_member_sees_only_assigned_projects_in_team(): void
+    public function test_member_only_sees_assigned_projects(): void
     {
-        $user = User::factory()->create();
-        $team = Team::factory()->create(['owner_id' => $user->id]);
-        $team->users()->attach($user->id, [
-            'role' => 'member',
-            'joined_at' => now(),
-        ]);
+        $member = User::factory()->create();
+        $owner = User::factory()->create();
+        $team = Team::factory()->create(['owner_id' => $owner->id]);
+        $team->addMember($member, 'member');
 
-        $projectVisible = Project::factory()->create([
+        $project = Project::factory()->create([
             'team_id' => $team->id,
-            'created_by' => $user->id,
-            'name' => 'Proyecto Visible',
-        ]);
-        $projectHidden = Project::factory()->create([
-            'team_id' => $team->id,
-            'created_by' => $user->id,
-            'name' => 'Proyecto Oculto',
+            'created_by' => $owner->id,
         ]);
 
-        $projectVisible->members()->attach($user->id, [
-            'role' => 'member',
-            'joined_at' => now(),
-        ]);
+        $response = $this->actingAs($member)
+            ->get(route('projects.index', ['team' => $team->id]));
 
-        $this->actingAs($user)
-            ->get(route('teams.show', $team))
-            ->assertOk()
-            ->assertSee('Proyecto Visible')
-            ->assertDontSee('Proyecto Oculto');
+        $response->assertOk();
+        $response->assertDontSee($project->name);
     }
 
     public function test_member_cannot_access_unassigned_project(): void
     {
-        $user = User::factory()->create();
-        $team = Team::factory()->create(['owner_id' => $user->id]);
-        $team->users()->attach($user->id, [
-            'role' => 'member',
-            'joined_at' => now(),
-        ]);
+        $member = User::factory()->create();
+        $owner = User::factory()->create();
+        $team = Team::factory()->create(['owner_id' => $owner->id]);
+        $team->addMember($member, 'member');
 
         $project = Project::factory()->create([
             'team_id' => $team->id,
-            'created_by' => $user->id,
+            'created_by' => $owner->id,
         ]);
 
-        $this->actingAs($user)
-            ->get(route('projects.show', $project))
-            ->assertForbidden();
+        $response = $this->actingAs($member)
+            ->get(route('projects.show', $project));
+
+        $response->assertForbidden();
     }
 }

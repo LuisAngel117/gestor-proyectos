@@ -9,7 +9,7 @@ El ACL se evalúa con tres capas:
 
 1. **Rol global**: `users.role`
 2. **Rol por Team**: `team_user.role`
-3. **Rol por Project**: `project_user.role` + `project_user.permissions` (JSON opcional)
+3. **Rol por Project**: `project_user.role`
 
 ### Orden de evaluación
 
@@ -68,7 +68,7 @@ Si un usuario intenta una acción que requiere rol mayor:
 
 - La autorización se resuelve en **Policies** del lado servidor.
 - No se usarán paquetes externos de permisos (Spatie).
-- `project_user.permissions` se usa solo como override explícito y documentado.
+- No se usa JSON de permisos en `project_user` (solo roles).
 
 ## Archivos fuente
 

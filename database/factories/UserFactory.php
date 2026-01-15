@@ -58,26 +58,6 @@ class UserFactory extends Factory
     }
 
     /**
-     * Indicate that the user is an admin.
-     */
-    public function admin(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'role' => 'admin',
-        ]);
-    }
-
-    /**
-     * Indicate that the user is an observer.
-     */
-    public function observer(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'role' => 'observer',
-        ]);
-    }
-
-    /**
      * Indicate that the user is inactive.
      */
     public function inactive(): static
