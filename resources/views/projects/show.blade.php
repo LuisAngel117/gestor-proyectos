@@ -3,48 +3,46 @@
 @section('title', $project->name)
 
 @section('content')
-<x-slot name="header">
-    <div class="flex justify-between items-center">
-        <div>
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                {{ $project->name }}
-            </h2>
-            <p class="text-sm text-gray-600 mt-1">
-                Equipo: {{ $project->team->name }} • Creado por: {{ $project->creator->full_name }}
-            </p>
-        </div>
-        <div class="flex space-x-2">
-            @can('update', $project)
-            <a href="{{ route('projects.edit', $project) }}" class="btn-secondary">
-                <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                </svg>
-                Editar
-            </a>
-            @endcan
-            <a href="{{ route('sprints.index', $project) }}" class="btn-secondary">
-                <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                </svg>
-                Sprints
-            </a>
-            @can('viewAny', [\App\Models\BacklogItem::class, $project])
-            <a href="{{ route('backlog.index', $project) }}" class="btn-secondary">
-                <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5h6M9 9h6M9 13h6M5 5h.01M5 9h.01M5 13h.01M5 17h.01M9 17h6"></path>
-                </svg>
-                Backlog
-            </a>
-            @endcan
-            <a href="{{ route('projects.index') }}" class="btn-secondary">
-                <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                </svg>
-                Volver
-            </a>
-        </div>
+<div class="flex flex-wrap justify-between items-center gap-4 mb-6">
+    <div>
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+            {{ $project->name }}
+        </h2>
+        <p class="text-sm text-gray-600 mt-1">
+            Equipo: {{ $project->team->name }} • Creado por: {{ $project->creator->full_name }}
+        </p>
     </div>
-</x-slot>
+    <div class="flex flex-wrap gap-2">
+        @can('update', $project)
+        <a href="{{ route('projects.edit', $project) }}" class="btn-secondary">
+            <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+            </svg>
+            Editar
+        </a>
+        @endcan
+        <a href="{{ route('sprints.index', $project) }}" class="btn-secondary">
+            <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            </svg>
+            Sprints
+        </a>
+        @can('viewAny', [\App\Models\BacklogItem::class, $project])
+        <a href="{{ route('backlog.index', $project) }}" class="btn-secondary">
+            <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5h6M9 9h6M9 13h6M5 5h.01M5 9h.01M5 13h.01M5 17h.01M9 17h6"></path>
+            </svg>
+            Backlog
+        </a>
+        @endcan
+        <a href="{{ route('projects.index') }}" class="btn-secondary">
+            <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+            </svg>
+            Volver
+        </a>
+    </div>
+</div>
 
 <div class="space-y-6">
     <!-- Información del proyecto -->

@@ -24,13 +24,29 @@ class SprintPolicy
      */
     public function plan(User $user, Sprint $sprint): bool
     {
-        return $this->canManageSprint($user, $sprint);
+        return $this->canManageSprint($user, $sprint) && $sprint->isPlanning();
     }
 
     /**
      * Determine whether the user can reorder sprint backlog items.
      */
     public function reorderBacklog(User $user, Sprint $sprint): bool
+    {
+        return $this->canManageSprint($user, $sprint) && $sprint->isPlanning();
+    }
+
+    /**
+     * Determine whether the user can start a sprint.
+     */
+    public function startSprint(User $user, Sprint $sprint): bool
+    {
+        return $this->canManageSprint($user, $sprint);
+    }
+
+    /**
+     * Determine whether the user can close a sprint.
+     */
+    public function closeSprint(User $user, Sprint $sprint): bool
     {
         return $this->canManageSprint($user, $sprint);
     }
