@@ -22,6 +22,14 @@
                 Editar
             </a>
             @endcan
+            @can('viewAny', [\App\Models\BacklogItem::class, $project])
+            <a href="{{ route('backlog.index', $project) }}" class="btn-secondary">
+                <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5h6M9 9h6M9 13h6M5 5h.01M5 9h.01M5 13h.01M5 17h.01M9 17h6"></path>
+                </svg>
+                Backlog
+            </a>
+            @endcan
             <a href="{{ route('projects.index') }}" class="btn-secondary">
                 <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
