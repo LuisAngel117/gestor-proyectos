@@ -89,8 +89,16 @@ class Project extends Model
     public function members(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'project_user')
-            ->withPivot('role', 'permissions', 'joined_at')
+            ->withPivot('role', 'joined_at')
             ->withTimestamps();
+    }
+
+    /**
+     * Get sprints for the project.
+     */
+    public function sprints(): HasMany
+    {
+        return $this->hasMany(Sprint::class);
     }
 
     /**
@@ -161,12 +169,11 @@ class Project extends Model
     /**
      * Add a member to the project with a specific role.
      */
-    public function addMember(User $user, string $role = 'member', ?array $permissions = null): void
+    public function addMember(User $user, string $role = 'member'): void
     {
         if (!$this->hasMember($user)) {
             $this->members()->attach($user->id, [
                 'role' => $role,
-                'permissions' => $permissions ? json_encode($permissions) : null,
                 'joined_at' => now(),
             ]);
         }

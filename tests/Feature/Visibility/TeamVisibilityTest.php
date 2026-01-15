@@ -11,21 +11,20 @@ class TeamVisibilityTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_member_sees_only_its_teams(): void
+    public function test_team_index_shows_only_memberships(): void
     {
-        $user = User::factory()->create();
-        $teamA = Team::factory()->create(['owner_id' => $user->id]);
-        $teamB = Team::factory()->create();
+        $member = User::factory()->create();
 
-        $teamA->users()->attach($user->id, [
-            'role' => 'member',
-            'joined_at' => now(),
-        ]);
+        $owner = User::factory()->create();
+        $teamVisible = Team::factory()->create(['owner_id' => $owner->id]);
+        $teamVisible->addMember($member, 'member');
 
-        $this->actingAs($user)
-            ->get(route('teams.index'))
-            ->assertOk()
-            ->assertSee($teamA->name)
-            ->assertDontSee($teamB->name);
+        $teamHidden = Team::factory()->create();
+
+        $response = $this->actingAs($member)->get(route('teams.index'));
+
+        $response->assertOk();
+        $response->assertSee($teamVisible->name);
+        $response->assertDontSee($teamHidden->name);
     }
 }

@@ -127,7 +127,7 @@
                         </div>
                         <div class="flex items-center justify-between">
                             <span class="text-sm text-gray-600">Sprints</span>
-                            <span class="text-lg font-semibold text-gray-900">0</span>
+                            <span class="text-lg font-semibold text-gray-900">{{ $project->sprints->count() }}</span>
                         </div>
                         <div class="flex items-center justify-between">
                             <span class="text-sm text-gray-600">Tareas</span>
