@@ -42,10 +42,12 @@ Notas:
 | viewAny / view | ✅ | ✅ | ✅ | ✅ |
 | update | ✅ | ✅ | ❌ | ❌ |
 | delete | ✅ | ❌ | ❌ | ❌ |
+| transferOwnership | ✅ | ❌ | ❌ | ❌ |
 
 Reglas adicionales:
 - **create Project**: permitido solo si el rol en el team es `owner` o `admin`.
 - **view Project (baseline)**: permitido si existe membresía en el proyecto o si el usuario es `owner/admin` del team del proyecto (visión administrativa).
+- **owner mínimo**: no se permite eliminar al último owner del proyecto.
 
 ## Regla anti-elevación
 
