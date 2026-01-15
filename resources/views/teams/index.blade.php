@@ -74,18 +74,17 @@
                             </p>
                             <div class="mt-3 flex items-center space-x-2">
                                 @php
-                                    $role = $team->pivot->role ?? null;
-                                    $roleLabel = $role ? ucfirst($role) : 'Sin membresía';
+                                    $role = $team->pivot->role ?? (auth()->user()->isSuperadmin() ? 'superadmin' : 'member');
                                     $roleBadge = match ($role) {
                                         'owner' => 'danger',
                                         'admin' => 'warning',
                                         'observer' => 'info',
-                                        'member' => 'success',
-                                        default => 'secondary',
+                                        'superadmin' => 'primary',
+                                        default => 'success',
                                     };
                                 @endphp
                                 <span class="badge badge-{{ $roleBadge }}">
-                                    {{ $roleLabel }}
+                                    {{ ucfirst($role) }}
                                 </span>
                                 <span class="text-sm text-gray-500">
                                     Owner: {{ $team->owner->name }}
