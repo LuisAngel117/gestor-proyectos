@@ -79,6 +79,9 @@ Notas:
 | view | ✅ | ✅ | ✅ | ✅ |
 | plan | ✅ | ✅ | ❌ | ❌ |
 | reorderBacklog | ✅ | ✅ | ❌ | ❌ |
+| startSprint | ✅ | ✅ | ❌ | ❌ |
+| closeSprint | ✅ | ✅ | ❌ | ❌ |
 
 Notas:
 - La planificación de sprint requiere rol `owner/admin` en proyecto o team.
+- `startSprint` y `closeSprint` requieren `owner/admin` en proyecto o team.
