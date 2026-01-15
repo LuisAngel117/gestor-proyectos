@@ -119,7 +119,7 @@ class Team extends Model
      */
     public function addMember(User $user, string $role = 'member'): void
     {
-        if (!$this->hasMember($user)) {
+        if (!$this->users()->where('user_id', $user->id)->exists()) {
             $this->users()->attach($user->id, [
                 'role' => $role,
                 'joined_at' => now(),

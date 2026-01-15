@@ -129,7 +129,7 @@ class ProjectController extends Controller
     {
         $this->authorize('view', $project);
 
-        $project->load(['team.users', 'creator', 'members']);
+        $project->load(['team.users', 'creator', 'members', 'sprints']);
 
         return view('projects.show', compact('project'));
     }

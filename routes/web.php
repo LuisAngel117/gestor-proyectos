@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\BacklogItemController;
 use App\Http\Controllers\ProjectMemberController;
 use App\Http\Controllers\ProjectOwnershipController;
 use Illuminate\Support\Facades\Route;
@@ -43,6 +44,23 @@ Route::middleware('auth')->group(function () {
         Route::resource('projects', \App\Http\Controllers\ProjectController::class);
         Route::patch('projects/{project}/owner', [\App\Http\Controllers\ProjectController::class, 'transferOwner'])
             ->name('projects.transfer-owner');
+
+        Route::scopeBindings()->group(function () {
+            Route::get('projects/{project}/backlog', [BacklogItemController::class, 'index'])
+                ->name('backlog.index');
+            Route::get('projects/{project}/backlog/create', [BacklogItemController::class, 'create'])
+                ->name('backlog.create');
+            Route::post('projects/{project}/backlog', [BacklogItemController::class, 'store'])
+                ->name('backlog.store');
+            Route::get('projects/{project}/backlog/{backlogItem}/edit', [BacklogItemController::class, 'edit'])
+                ->name('backlog.edit');
+            Route::put('projects/{project}/backlog/{backlogItem}', [BacklogItemController::class, 'update'])
+                ->name('backlog.update');
+            Route::delete('projects/{project}/backlog/{backlogItem}', [BacklogItemController::class, 'destroy'])
+                ->name('backlog.destroy');
+            Route::post('projects/{project}/backlog/reorder', [BacklogItemController::class, 'reorder'])
+                ->name('backlog.reorder');
+        });
 
         Route::get('projects/{project}/members', [ProjectMemberController::class, 'index'])
             ->name('projects.members.index');

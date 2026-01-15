@@ -6,16 +6,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class ProjectUser extends Model
+class Sprint extends Model
 {
     use HasFactory;
-
-    /**
-     * The table associated with the model.
-     *
-     * @var string
-     */
-    protected $table = 'project_user';
 
     /**
      * The attributes that are mass assignable.
@@ -24,9 +17,11 @@ class ProjectUser extends Model
      */
     protected $fillable = [
         'project_id',
-        'user_id',
-        'role',
-        'joined_at',
+        'name',
+        'sequence',
+        'start_date',
+        'end_date',
+        'status',
     ];
 
     /**
@@ -35,23 +30,15 @@ class ProjectUser extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'joined_at' => 'datetime',
+        'start_date' => 'date',
+        'end_date' => 'date',
     ];
 
     /**
-     * Get the project associated with this membership.
+     * Get the project that owns the sprint.
      */
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);
     }
-
-    /**
-     * Get the user associated with this membership.
-     */
-    public function user(): BelongsTo
-    {
-        return $this->belongsTo(User::class);
-    }
-
 }
