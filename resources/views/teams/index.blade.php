@@ -45,7 +45,7 @@
                     </div>
                     <div class="mt-4 flex space-x-2">
                         <a href="{{ route('teams.show', $team) }}" class="btn-secondary text-xs py-1 px-3">
-                            Ver
+                            Seleccionar
                         </a>
                         <a href="{{ route('teams.edit', $team) }}" class="btn-secondary text-xs py-1 px-3">
                             Editar
@@ -84,7 +84,7 @@
                     </div>
                     <div class="mt-4">
                         <a href="{{ route('teams.show', $team) }}" class="btn-secondary text-xs py-1 px-3">
-                            Ver Equipo
+                            Seleccionar Equipo
                         </a>
                     </div>
                 </div>

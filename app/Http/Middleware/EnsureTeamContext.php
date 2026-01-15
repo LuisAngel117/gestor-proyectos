@@ -2,46 +2,94 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Project;
+use App\Models\Team;
+use App\Support\Context\TeamContext;
 use Closure;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class EnsureTeamContext
 {
-    /**
-     * Handle an incoming request.
-     *
-     * Este middleware asegura que el usuario haya seleccionado un equipo
-     * antes de acceder a rutas que requieren contexto de equipo.
-     *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
-     */
     public function handle(Request $request, Closure $next): Response
     {
-        // Verificar si el usuario está autenticado
-        if (!auth()->check()) {
-            return redirect()->route('login');
+        $user = $request->user();
+
+        if (!$user) {
+            return $next($request);
         }
 
-        // Obtener el ID del equipo del parámetro de ruta o sesión
-        $teamId = $request->route('team') ?? session('current_team_id');
+        $team = $this->resolveTeamCandidate($request);
 
-        // Si no hay equipo seleccionado, redirigir a la selección de equipo
-        if (!$teamId) {
-            return redirect()
-                ->route('teams.index')
-                ->with('warning', 'Por favor selecciona un equipo antes de continuar.');
+        if (!$team) {
+            return $this->handleMissingContext($request, $user->teams()->count());
         }
 
-        // Verificar que el usuario pertenezca al equipo
-        $user = auth()->user();
-        if (!$user->belongsToTeam($teamId)) {
-            abort(403, 'No tienes acceso a este equipo.');
+        if (!$user->isSuperadmin() && !$user->belongsToTeam($team->id)) {
+            TeamContext::clear();
+            abort(403);
         }
 
-        // Guardar el equipo actual en la sesión
-        session(['current_team_id' => $teamId]);
+        TeamContext::set($team->id, $team->name);
+
+        $project = $request->route('project');
+        if ($project) {
+            $projectModel = $project instanceof Project ? $project : Project::find($project);
+            if ($projectModel && $projectModel->team_id !== $team->id) {
+                abort(403);
+            }
+        }
 
         return $next($request);
+    }
+
+    private function resolveTeamCandidate(Request $request): ?Team
+    {
+        $teamParam = $request->route('team');
+        if ($teamParam) {
+            $team = $teamParam instanceof Team ? $teamParam : Team::find($teamParam);
+            if (!$team) {
+                abort(403);
+            }
+
+            return $team;
+        }
+
+        $teamId = TeamContext::get();
+        if ($teamId) {
+            $team = Team::find($teamId);
+            if (!$team) {
+                abort(403);
+            }
+
+            return $team;
+        }
+
+        $user = $request->user();
+        if (!$user) {
+            return null;
+        }
+
+        $teamIds = $user->teams()->pluck('teams.id');
+        if ($teamIds->count() === 1) {
+            return Team::find($teamIds->first());
+        }
+
+        return null;
+    }
+
+    private function handleMissingContext(Request $request, int $teamCount): RedirectResponse
+    {
+        TeamContext::clear();
+        $request->session()->put('url.intended', $request->fullUrl());
+
+        $message = $teamCount === 0
+            ? 'No tienes equipos disponibles. Crea un equipo para continuar.'
+            : 'Selecciona un equipo para continuar.';
+
+        return redirect()
+            ->route('teams.index')
+            ->with('warning', $message);
     }
 }
