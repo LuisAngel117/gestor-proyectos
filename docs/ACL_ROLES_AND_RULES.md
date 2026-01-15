@@ -52,3 +52,9 @@ Reglas adicionales:
 ## Regla anti-elevación
 
 Acción no permitida → 403. Los intentos repetidos deben registrarse en auditoría cuando exista ese módulo.
+
+## Visibilidad vs permisos
+
+- La visibilidad define qué recursos aparecen en listados y se pueden acceder por URL directa.
+- Los permisos (create/update/delete/manageMembers/transferOwnership) aplican después.
+- La estrategia de bloqueo para recursos no visibles es **403** (consistente en UI y endpoints).

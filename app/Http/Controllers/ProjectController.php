@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Project;
 use App\Models\Team;
 use App\Support\Catalog;
+use App\Support\Visibility\ProjectVisibility;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
@@ -25,15 +26,12 @@ class ProjectController extends Controller
             $team = Team::findOrFail($teamId);
             $this->authorize('view', $team);
 
-            $projects = $team->projects()
+            $projects = ProjectVisibility::visibleProjectsForTeam($user, $team)
                 ->with(['team', 'creator', 'members'])
                 ->latest()
                 ->paginate(12);
         } else {
-            // Mostrar proyectos de equipos donde el usuario es miembro
-            $teamIds = $user->teams()->pluck('teams.id');
-
-            $projects = Project::whereIn('team_id', $teamIds)
+            $projects = ProjectVisibility::visibleProjectsFor($user)
                 ->with(['team', 'creator', 'members'])
                 ->latest()
                 ->paginate(12);
