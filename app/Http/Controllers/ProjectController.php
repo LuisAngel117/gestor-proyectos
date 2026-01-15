@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Project;
 use App\Models\Team;
 use App\Support\Catalog;
+use App\Support\Visibility\ProjectVisibility;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
@@ -25,15 +26,12 @@ class ProjectController extends Controller
             $team = Team::findOrFail($teamId);
             $this->authorize('view', $team);
 
-            $projects = $team->projects()
+            $projects = ProjectVisibility::visibleProjectsForTeam($user, $team)
                 ->with(['team', 'creator', 'members'])
                 ->latest()
                 ->paginate(12);
         } else {
-            // Mostrar proyectos de equipos donde el usuario es miembro
-            $teamIds = $user->teams()->pluck('teams.id');
-
-            $projects = Project::whereIn('team_id', $teamIds)
+            $projects = ProjectVisibility::visibleProjectsFor($user)
                 ->with(['team', 'creator', 'members'])
                 ->latest()
                 ->paginate(12);
@@ -170,17 +168,7 @@ class ProjectController extends Controller
         ]);
 
         if (!empty($validated['team_id']) && $validated['team_id'] !== $project->team_id) {
-            $user = Auth::user();
-            $newTeam = Team::findOrFail($validated['team_id']);
-
-            if (!$newTeam->hasMember($user) && !$user->isSuperadmin()) {
-                abort(403, 'No perteneces al equipo destino.');
-            }
-
-            $userRole = $newTeam->getUserRole($user);
-            if (!in_array($userRole, ['owner', 'admin']) && !$user->isSuperadmin()) {
-                abort(403, 'No tienes permiso para mover este proyecto al equipo destino.');
-            }
+            $this->authorize('changeTeam', $project);
         }
 
         $project->update($validated);
@@ -194,7 +182,7 @@ class ProjectController extends Controller
      */
     public function transferOwner(Request $request, Project $project)
     {
-        $this->authorize('manageMembers', $project);
+        $this->authorize('transferOwnership', $project);
 
         $validated = $request->validate([
             'user_id' => ['required', 'exists:users,id'],
@@ -203,6 +191,10 @@ class ProjectController extends Controller
         $newOwner = $project->members()->where('users.id', $validated['user_id'])->first();
         if (!$newOwner) {
             abort(403, 'El usuario seleccionado no pertenece al proyecto.');
+        }
+
+        if (!$project->team->hasMember($newOwner)) {
+            abort(403, 'El usuario seleccionado no pertenece al team del proyecto.');
         }
 
         $currentOwner = $project->members()->wherePivot('role', 'owner')->first();

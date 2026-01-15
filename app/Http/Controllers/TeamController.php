@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Team;
+use App\Support\Visibility\ProjectVisibility;
+use App\Support\Visibility\TeamVisibility;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -16,7 +18,9 @@ class TeamController extends Controller
         $user = Auth::user();
 
         // Equipos donde el usuario es miembro
-        $teams = $user->teams()->with('owner')->get();
+        $teams = TeamVisibility::visibleTeamsFor($user)
+            ->with('owner')
+            ->get();
 
         // Equipos propiedad del usuario
         $ownedTeams = $user->ownedTeams()->with('users')->get();
@@ -65,13 +69,10 @@ class TeamController extends Controller
     {
         $user = Auth::user();
 
-        // Verificar que el usuario sea miembro del equipo
-        if (!$team->hasMember($user) && !$user->isSuperadmin()) {
-            abort(403, 'No tienes acceso a este equipo');
-        }
+        $this->authorize('view', $team);
 
         $team->load(['owner', 'users']);
-        $projects = $team->projects()
+        $projects = ProjectVisibility::visibleProjectsForTeam($user, $team)
             ->with(['creator', 'members'])
             ->latest()
             ->paginate(12);

@@ -42,11 +42,19 @@ Notas:
 | viewAny / view | ✅ | ✅ | ✅ | ✅ |
 | update | ✅ | ✅ | ❌ | ❌ |
 | delete | ✅ | ❌ | ❌ | ❌ |
+| transferOwnership | ✅ | ❌ | ❌ | ❌ |
 
 Reglas adicionales:
 - **create Project**: permitido solo si el rol en el team es `owner` o `admin`.
 - **view Project (baseline)**: permitido si existe membresía en el proyecto o si el usuario es `owner/admin` del team del proyecto (visión administrativa).
+- **owner mínimo**: no se permite eliminar al último owner del proyecto.
 
 ## Regla anti-elevación
 
 Acción no permitida → 403. Los intentos repetidos deben registrarse en auditoría cuando exista ese módulo.
+
+## Visibilidad vs permisos
+
+- La visibilidad define qué recursos aparecen en listados y se pueden acceder por URL directa.
+- Los permisos (create/update/delete/manageMembers/transferOwnership) aplican después.
+- La estrategia de bloqueo para recursos no visibles es **403** (consistente en UI y endpoints).

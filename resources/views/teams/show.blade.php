@@ -14,12 +14,14 @@
             </p>
         </div>
         <div class="flex gap-2">
+            @can('create', [\App\Models\Project::class, $team])
             <a href="{{ route('projects.create', ['team' => $team->id]) }}" class="btn-primary">
                 <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                 </svg>
                 Nuevo Proyecto
             </a>
+            @endcan
             <a href="{{ route('teams.index') }}" class="btn-secondary">
                 <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
@@ -89,11 +91,13 @@
             @else
                 <div class="text-center py-12">
                     <p class="text-sm text-gray-600">Este equipo no tiene proyectos aún.</p>
-                    <div class="mt-4">
-                        <a href="{{ route('projects.create', ['team' => $team->id]) }}" class="btn-primary">
-                            Crear primer proyecto
-                        </a>
-                    </div>
+                    @can('create', [\App\Models\Project::class, $team])
+                        <div class="mt-4">
+                            <a href="{{ route('projects.create', ['team' => $team->id]) }}" class="btn-primary">
+                                Crear primer proyecto
+                            </a>
+                        </div>
+                    @endcan
                 </div>
             @endif
         </div>
