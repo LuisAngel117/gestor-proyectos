@@ -58,3 +58,16 @@ Acción no permitida → 403. Los intentos repetidos deben registrarse en audito
 - La visibilidad define qué recursos aparecen en listados y se pueden acceder por URL directa.
 - Los permisos (create/update/delete/manageMembers/transferOwnership) aplican después.
 - La estrategia de bloqueo para recursos no visibles es **403** (consistente en UI y endpoints).
+
+## Matriz base — BacklogItemPolicy
+
+| Acción | Owner | Admin | Member | Observer |
+|--------|:-----:|:-----:|:------:|:--------:|
+| viewAny / view | ✅ | ✅ | ✅ | ✅ |
+| create | ✅ | ✅ | ❌ | ❌ |
+| update | ✅ | ✅ | ❌ | ❌ |
+| delete | ✅ | ✅ | ❌ | ❌ |
+| reorder | ✅ | ✅ | ❌ | ❌ |
+
+Notas:
+- La visibilidad del backlog depende de `ProjectPolicy@view`.

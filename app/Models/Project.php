@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
@@ -90,6 +91,14 @@ class Project extends Model
         return $this->belongsToMany(User::class, 'project_user')
             ->withPivot('role', 'permissions', 'joined_at')
             ->withTimestamps();
+    }
+
+    /**
+     * Get backlog items for the project.
+     */
+    public function backlogItems(): HasMany
+    {
+        return $this->hasMany(BacklogItem::class);
     }
 
     /**
