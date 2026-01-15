@@ -49,8 +49,6 @@ class ProjectController extends Controller
      */
     public function create(Request $request)
     {
-        $this->authorize('create', Project::class);
-
         $user = Auth::user();
 
         // Obtener equipos donde el usuario puede crear proyectos (owner o admin)
@@ -64,6 +62,12 @@ class ProjectController extends Controller
         }
 
         $teamId = $request->get('team');
+        if ($teamId) {
+            $team = Team::findOrFail($teamId);
+            $this->authorize('create', [Project::class, $team]);
+        } else {
+            $this->authorize('create', Project::class);
+        }
 
         return view('projects.create', compact('teams', 'teamId'));
     }
@@ -73,8 +77,6 @@ class ProjectController extends Controller
      */
     public function store(Request $request)
     {
-        $this->authorize('create', Project::class);
-
         $user = Auth::user();
 
         $validated = $request->validate([
@@ -90,6 +92,8 @@ class ProjectController extends Controller
 
         // Verificar que el usuario pertenece al equipo
         $team = Team::findOrFail($validated['team_id']);
+        $this->authorize('create', [Project::class, $team]);
+
         if (!$team->hasMember($user) && !$user->isSuperadmin()) {
             abort(403, 'No perteneces a este equipo.');
         }

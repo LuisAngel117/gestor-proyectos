@@ -8,6 +8,14 @@ use App\Models\User;
 class TeamPolicy
 {
     /**
+     * Superadmin override.
+     */
+    public function before(User $user, string $ability): ?bool
+    {
+        return $user->isSuperadmin() ? true : null;
+    }
+
+    /**
      * Determine if the user can view any teams.
      */
     public function viewAny(User $user): bool
@@ -21,11 +29,6 @@ class TeamPolicy
      */
     public function view(User $user, Team $team): bool
     {
-        // Superadmin puede ver todo
-        if ($user->isSuperadmin()) {
-            return true;
-        }
-
         // Miembro del equipo puede verlo
         return $team->hasMember($user);
     }
@@ -44,11 +47,6 @@ class TeamPolicy
      */
     public function update(User $user, Team $team): bool
     {
-        // Superadmin puede actualizar
-        if ($user->isSuperadmin()) {
-            return true;
-        }
-
         // Owner o admin del equipo pueden actualizar
         return $team->userCan($user, 'update');
     }
@@ -58,11 +56,6 @@ class TeamPolicy
      */
     public function delete(User $user, Team $team): bool
     {
-        // Superadmin puede eliminar
-        if ($user->isSuperadmin()) {
-            return true;
-        }
-
         // Solo el owner del equipo puede eliminarlo
         return $team->isOwner($user);
     }
@@ -72,11 +65,6 @@ class TeamPolicy
      */
     public function manageMembers(User $user, Team $team): bool
     {
-        // Superadmin puede gestionar miembros
-        if ($user->isSuperadmin()) {
-            return true;
-        }
-
         // Owner o admin pueden gestionar miembros
         return $team->userCan($user, 'manageMembers');
     }
@@ -86,11 +74,6 @@ class TeamPolicy
      */
     public function createProject(User $user, Team $team): bool
     {
-        // Superadmin puede crear proyectos
-        if ($user->isSuperadmin()) {
-            return true;
-        }
-
         // Owner o admin pueden crear proyectos
         return $team->userCan($user, 'createProject');
     }
@@ -100,11 +83,6 @@ class TeamPolicy
      */
     public function viewReports(User $user, Team $team): bool
     {
-        // Superadmin puede ver reportes
-        if ($user->isSuperadmin()) {
-            return true;
-        }
-
         // Cualquier miembro puede ver reportes
         return $team->hasMember($user);
     }
