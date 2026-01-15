@@ -71,8 +71,12 @@ class TeamController extends Controller
         }
 
         $team->load(['owner', 'users']);
+        $projects = $team->projects()
+            ->with(['creator', 'members'])
+            ->latest()
+            ->paginate(12);
 
-        return view('teams.show', compact('team'));
+        return view('teams.show', compact('team', 'projects'));
     }
 
     /**

@@ -24,11 +24,30 @@
                 @csrf
                 @method('PUT')
 
-                <!-- Información del equipo (no editable) -->
+                <!-- Información del equipo -->
                 <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
                     <h4 class="text-sm font-semibold text-gray-900 mb-2">Equipo</h4>
-                    <p class="text-sm text-gray-700">{{ $project->team->name }}</p>
-                    <p class="text-xs text-gray-500 mt-1">El equipo no se puede cambiar una vez creado el proyecto</p>
+                    @if($teams->isNotEmpty())
+                        <label for="team_id" class="form-label">Equipo asignado</label>
+                        <select
+                            id="team_id"
+                            name="team_id"
+                            class="form-input w-full @error('team_id') border-red-500 @enderror"
+                        >
+                            @foreach($teams as $team)
+                                <option value="{{ $team->id }}" {{ old('team_id', $project->team_id) == $team->id ? 'selected' : '' }}>
+                                    {{ $team->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('team_id')
+                            <p class="form-error">{{ $message }}</p>
+                        @enderror
+                        <p class="text-xs text-gray-500 mt-1">Solo puedes mover el proyecto a equipos donde tengas permisos de administración.</p>
+                    @else
+                        <p class="text-sm text-gray-700">{{ $project->team->name }}</p>
+                        <p class="text-xs text-gray-500 mt-1">No tienes permisos para mover este proyecto a otro equipo.</p>
+                    @endif
                 </div>
 
                 <!-- Nombre del proyecto -->
@@ -78,6 +97,7 @@
                             <option value="en_espera" {{ old('status', $project->status) == 'en_espera' ? 'selected' : '' }}>En Espera</option>
                             <option value="completado" {{ old('status', $project->status) == 'completado' ? 'selected' : '' }}>Completado</option>
                             <option value="cancelado" {{ old('status', $project->status) == 'cancelado' ? 'selected' : '' }}>Cancelado</option>
+                            <option value="archivado" {{ old('status', $project->status) == 'archivado' ? 'selected' : '' }}>Archivado</option>
                         </select>
                         @error('status')
                             <p class="form-error">{{ $message }}</p>
