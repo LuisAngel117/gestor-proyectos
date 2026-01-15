@@ -5,6 +5,7 @@ Este documento define qué recursos son visibles en listados y por acceso direct
 ## Estrategia de bloqueo
 
 - Recurso no visible → **403** (consistente con Policies).
+- Contexto de team inválido o ausente en rutas protegidas → **403**.
 
 ## Teams
 
@@ -25,3 +26,11 @@ Se permite si:
 - `project_user` existe (cualquier rol), o
 - el usuario es owner/admin del team del proyecto, o
 - el usuario es superadmin.
+
+## Guardrail de contexto (M-13)
+
+Las rutas de proyectos están protegidas por un middleware de contexto que valida:
+
+- Existe un **team activo** en sesión (o auto-selección si aplica).
+- El usuario pertenece al team activo (excepto superadmin).
+- El `project.team_id` coincide con el team activo.

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Team;
+use App\Support\Context\TeamContext;
 use App\Support\Visibility\ProjectVisibility;
 use App\Support\Visibility\TeamVisibility;
 use Illuminate\Http\Request;
@@ -70,6 +71,7 @@ class TeamController extends Controller
         $user = Auth::user();
 
         $this->authorize('view', $team);
+        TeamContext::set($team->id, $team->name);
 
         $team->load(['owner', 'users']);
         $projects = ProjectVisibility::visibleProjectsForTeam($user, $team)
