@@ -11,6 +11,8 @@ Este documento define el listado oficial de acciones que deben ser autorizables 
 - `comment`
 - `manageMembers`
 - `transferOwnership`
+- `plan`
+- `reorderBacklog`
 - `manageDependencies`
 - `registerTime`
 - `attachFiles`

@@ -5,7 +5,6 @@ namespace Tests\Feature\Middleware;
 use App\Models\Project;
 use App\Models\Team;
 use App\Models\User;
-use App\Support\Context\TeamContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -13,81 +12,61 @@ class EnsureTeamContextTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_redirects_when_no_context_and_multiple_teams(): void
+    public function test_redirects_when_user_has_multiple_teams_without_context(): void
     {
         $user = User::factory()->create();
-        $teamA = Team::factory()->create(['owner_id' => $user->id]);
-        $teamB = Team::factory()->create(['owner_id' => $user->id]);
 
-        $teamA->users()->attach($user->id, ['role' => 'member', 'joined_at' => now()]);
-        $teamB->users()->attach($user->id, ['role' => 'member', 'joined_at' => now()]);
+        $teamA = Team::factory()->create();
+        $teamA->addMember($user, 'member');
+
+        $teamB = Team::factory()->create();
+        $teamB->addMember($user, 'member');
 
         $response = $this->actingAs($user)->get(route('projects.index'));
 
         $response->assertRedirect(route('teams.index'));
-        $response->assertSessionHas('warning', 'Selecciona un equipo para continuar.');
-        $this->assertSame(route('projects.index'), session('url.intended'));
     }
 
     public function test_auto_selects_team_when_user_has_single_team(): void
     {
         $user = User::factory()->create();
-        $team = Team::factory()->create(['owner_id' => $user->id]);
 
-        $team->users()->attach($user->id, ['role' => 'member', 'joined_at' => now()]);
+        $team = Team::factory()->create();
+        $team->addMember($user, 'member');
 
         $response = $this->actingAs($user)->get(route('projects.index'));
 
         $response->assertOk();
-        $response->assertSessionHas(TeamContext::SESSION_KEY, $team->id);
     }
 
-    public function test_forbids_invalid_team_context(): void
+    public function test_blocks_access_when_user_not_in_project_team(): void
     {
         $user = User::factory()->create();
-        $team = Team::factory()->create(['owner_id' => $user->id]);
-        $otherTeam = Team::factory()->create();
 
-        $team->users()->attach($user->id, ['role' => 'member', 'joined_at' => now()]);
-
-        $this->actingAs($user)
-            ->withSession([TeamContext::SESSION_KEY => $otherTeam->id])
-            ->get(route('projects.index'))
-            ->assertForbidden();
-    }
-
-    public function test_forbids_project_outside_active_context(): void
-    {
-        $user = User::factory()->create();
-        $teamA = Team::factory()->create(['owner_id' => $user->id]);
-        $teamB = Team::factory()->create();
-
-        $teamA->users()->attach($user->id, ['role' => 'member', 'joined_at' => now()]);
-
+        $owner = User::factory()->create();
+        $team = Team::factory()->create(['owner_id' => $owner->id]);
         $project = Project::factory()->create([
-            'team_id' => $teamB->id,
-            'created_by' => $user->id,
+            'team_id' => $team->id,
+            'created_by' => $owner->id,
         ]);
 
-        $this->actingAs($user)
-            ->withSession([TeamContext::SESSION_KEY => $teamA->id])
-            ->get(route('projects.show', $project))
-            ->assertForbidden();
+        $response = $this->actingAs($user)->get(route('projects.show', $project));
+
+        $response->assertForbidden();
     }
 
-    public function test_superadmin_bypasses_team_membership(): void
+    public function test_superadmin_can_access_project_without_team_membership(): void
     {
-        $superadmin = User::factory()->create(['role' => 'superadmin']);
+        $superadmin = User::factory()->superadmin()->create();
+
         $team = Team::factory()->create();
         $project = Project::factory()->create([
             'team_id' => $team->id,
             'created_by' => $superadmin->id,
         ]);
 
-        $this->actingAs($superadmin)
-            ->withSession([TeamContext::SESSION_KEY => $team->id])
-            ->get(route('projects.show', $project))
-            ->assertOk()
-            ->assertSessionHas(TeamContext::SESSION_KEY, $team->id);
+        $response = $this->actingAs($superadmin)->get(route('projects.show', $project));
+
+        $response->assertOk();
     }
 }

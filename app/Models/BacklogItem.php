@@ -18,11 +18,13 @@ class BacklogItem extends Model
      */
     protected $fillable = [
         'project_id',
+        'sprint_id',
         'name',
         'description',
         'priority',
         'status',
         'position',
+        'sprint_position',
         'created_by',
     ];
 
@@ -35,10 +37,34 @@ class BacklogItem extends Model
     }
 
     /**
+     * Get the sprint that owns the backlog item.
+     */
+    public function sprint(): BelongsTo
+    {
+        return $this->belongsTo(Sprint::class);
+    }
+
+    /**
      * Get the user who created the backlog item.
      */
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /**
+     * Scope items not assigned to a sprint.
+     */
+    public function scopeUnassigned($query)
+    {
+        return $query->whereNull('sprint_id');
+    }
+
+    /**
+     * Scope items assigned to a sprint.
+     */
+    public function scopeAssignedToSprint($query, int $sprintId)
+    {
+        return $query->where('sprint_id', $sprintId);
     }
 }

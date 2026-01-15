@@ -26,19 +26,18 @@ class UsersSeeder extends Seeder
             'last_login_at' => now(),
         ]);
 
-        // Usuario Admin
+        // Usuarios normales
         User::create([
             'name' => 'Carlos',
             'apellido' => 'Administrador',
             'email' => 'carlos@gestor.test',
             'password' => Hash::make('password'),
-            'role' => 'admin',
+            'role' => 'user',
             'estado' => 'activo',
             'email_verified_at' => now(),
             'last_login_at' => now(),
         ]);
 
-        // 8 Usuarios normales con diferentes roles
         User::create([
             'name' => 'María',
             'apellido' => 'García',
@@ -84,7 +83,7 @@ class UsersSeeder extends Seeder
             'apellido' => 'Sánchez',
             'email' => 'laura@gestor.test',
             'password' => Hash::make('password'),
-            'role' => 'observer',
+            'role' => 'user',
             'estado' => 'activo',
             'email_verified_at' => now(),
         ]);
@@ -114,7 +113,7 @@ class UsersSeeder extends Seeder
             'apellido' => 'Torres',
             'email' => 'miguel@gestor.test',
             'password' => Hash::make('password'),
-            'role' => 'guest',
+            'role' => 'user',
             'estado' => 'activo',
             'email_verified_at' => now(),
         ]);

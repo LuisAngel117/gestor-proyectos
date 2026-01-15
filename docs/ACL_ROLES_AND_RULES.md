@@ -71,3 +71,14 @@ Acción no permitida → 403. Los intentos repetidos deben registrarse en audito
 
 Notas:
 - La visibilidad del backlog depende de `ProjectPolicy@view`.
+
+## Matriz base — SprintPolicy (planificación)
+
+| Acción | Owner | Admin | Member | Observer |
+|--------|:-----:|:-----:|:------:|:--------:|
+| view | ✅ | ✅ | ✅ | ✅ |
+| plan | ✅ | ✅ | ❌ | ❌ |
+| reorderBacklog | ✅ | ✅ | ❌ | ❌ |
+
+Notas:
+- La planificación de sprint requiere rol `owner/admin` en proyecto o team.

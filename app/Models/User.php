@@ -84,7 +84,7 @@ class User extends Authenticatable
     public function projects(): BelongsToMany
     {
         return $this->belongsToMany(Project::class, 'project_user')
-            ->withPivot('role', 'permissions', 'joined_at')
+            ->withPivot('role', 'joined_at')
             ->withTimestamps();
     }
 
@@ -117,7 +117,7 @@ class User extends Authenticatable
      */
     public function isAdmin(): bool
     {
-        return in_array($this->role, ['superadmin', 'admin']);
+        return $this->role === 'superadmin';
     }
 
     /**

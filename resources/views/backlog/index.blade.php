@@ -47,7 +47,7 @@
     @else
         <div class="card">
             <div class="card-body">
-                <form method="POST" action="{{ route('backlog.reorder', $project) }}">
+                <form id="backlog-reorder-form" method="POST" action="{{ route('backlog.reorder', $project) }}">
                     @csrf
                     <div class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-gray-200">
@@ -91,13 +91,14 @@
                                             </a>
                                             @endcan
                                             @can('delete', $item)
-                                            <form class="inline" method="POST" action="{{ route('backlog.destroy', [$project, $item]) }}">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn-danger text-xs py-1 px-3" onclick="return confirm('¿Archivar este ítem?')">
-                                                    Archivar
-                                                </button>
-                                            </form>
+                                            <button
+                                                type="submit"
+                                                class="btn-danger text-xs py-1 px-3"
+                                                form="backlog-delete-{{ $item->id }}"
+                                                onclick="return confirm('¿Archivar este ítem?')"
+                                            >
+                                                Archivar
+                                            </button>
                                             @endcan
                                         </td>
                                     </tr>
@@ -112,6 +113,15 @@
                     </div>
                     @endcan
                 </form>
+
+                @foreach($items as $item)
+                    @can('delete', $item)
+                    <form id="backlog-delete-{{ $item->id }}" method="POST" action="{{ route('backlog.destroy', [$project, $item]) }}" class="hidden">
+                        @csrf
+                        @method('DELETE')
+                    </form>
+                    @endcan
+                @endforeach
 
                 <div class="mt-4">
                     {{ $items->links() }}

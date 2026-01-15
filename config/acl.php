@@ -27,6 +27,8 @@ return [
         'comment',
         'manageMembers',
         'transferOwnership',
+        'plan',
+        'reorderBacklog',
         'manageDependencies',
         'registerTime',
         'attachFiles',
@@ -37,6 +39,5 @@ return [
     'rules' => [
         'superadmin_overrides' => true,
         'role_storage' => 'string',
-        'project_permissions_field' => 'permissions',
     ],
 ];

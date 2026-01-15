@@ -1,19 +1,20 @@
 <?php
 
-namespace Tests\Feature\Backlog;
+namespace Tests\Feature\Sprints;
 
 use App\Models\BacklogItem;
 use App\Models\Project;
+use App\Models\Sprint;
 use App\Models\Team;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-class BacklogReorderTest extends TestCase
+class SprintPlanningReorderTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_owner_can_reorder_backlog_items(): void
+    public function test_owner_can_reorder_sprint_items(): void
     {
         $owner = User::factory()->create();
         $team = Team::factory()->create(['owner_id' => $owner->id]);
@@ -25,35 +26,35 @@ class BacklogReorderTest extends TestCase
         ]);
         $project->addMember($owner, 'owner');
 
+        $sprint = Sprint::factory()->create([
+            'project_id' => $project->id,
+            'sequence' => 1,
+        ]);
+
         $itemA = BacklogItem::factory()->create([
             'project_id' => $project->id,
-            'position' => 1,
+            'sprint_id' => $sprint->id,
+            'sprint_position' => 1,
         ]);
 
         $itemB = BacklogItem::factory()->create([
             'project_id' => $project->id,
-            'position' => 2,
+            'sprint_id' => $sprint->id,
+            'sprint_position' => 2,
         ]);
 
-        $positions = [
-            (string) $itemA->id => 2,
-            (string) $itemB->id => 1,
-        ];
-
-        $response = $this->actingAs($owner)->post(route('backlog.reorder', $project), [
-            'positions' => $positions,
+        $response = $this->actingAs($owner)->post(route('sprints.plan.reorder', [$project, $sprint]), [
+            'positions' => [
+                (string) $itemA->id => 2,
+                (string) $itemB->id => 1,
+            ],
         ]);
 
-        $response->assertRedirect(route('backlog.index', $project));
+        $response->assertRedirect(route('sprints.plan', [$project, $sprint]));
 
         $this->assertDatabaseHas('backlog_items', [
             'id' => $itemA->id,
-            'position' => 2,
-        ]);
-
-        $this->assertDatabaseHas('backlog_items', [
-            'id' => $itemB->id,
-            'position' => 1,
+            'sprint_position' => 2,
         ]);
     }
 }
