@@ -6,6 +6,7 @@ use App\Http\Controllers\ProjectMemberController;
 use App\Http\Controllers\ProjectOwnershipController;
 use App\Http\Controllers\SprintController;
 use App\Http\Controllers\SprintPlanningController;
+use App\Http\Controllers\SprintStateController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -48,6 +49,23 @@ Route::middleware('auth')->group(function () {
             ->name('projects.transfer-owner');
 
         Route::scopeBindings()->group(function () {
+            Route::get('projects/{project}/sprints', [SprintController::class, 'index'])
+                ->name('sprints.index');
+            Route::get('projects/{project}/sprints/{sprint}', [SprintController::class, 'show'])
+                ->name('sprints.show');
+            Route::get('projects/{project}/sprints/{sprint}/plan', [SprintPlanningController::class, 'show'])
+                ->name('sprints.plan');
+            Route::post('projects/{project}/sprints/{sprint}/plan/assign', [SprintPlanningController::class, 'assign'])
+                ->name('sprints.plan.assign');
+            Route::post('projects/{project}/sprints/{sprint}/plan/unassign', [SprintPlanningController::class, 'unassign'])
+                ->name('sprints.plan.unassign');
+            Route::post('projects/{project}/sprints/{sprint}/plan/reorder', [SprintPlanningController::class, 'reorder'])
+                ->name('sprints.plan.reorder');
+            Route::post('projects/{project}/sprints/{sprint}/start', [SprintStateController::class, 'start'])
+                ->name('sprints.start');
+            Route::post('projects/{project}/sprints/{sprint}/close', [SprintStateController::class, 'close'])
+                ->name('sprints.close');
+
             Route::get('projects/{project}/backlog', [BacklogItemController::class, 'index'])
                 ->name('backlog.index');
             Route::get('projects/{project}/backlog/create', [BacklogItemController::class, 'create'])
