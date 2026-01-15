@@ -73,8 +73,19 @@
                                 {{ $team->description ?? 'Sin descripción' }}
                             </p>
                             <div class="mt-3 flex items-center space-x-2">
-                                <span class="badge badge-{{ $team->pivot->role === 'admin' ? 'warning' : ($team->pivot->role === 'observer' ? 'info' : 'success') }}">
-                                    {{ ucfirst($team->pivot->role) }}
+                                @php
+                                    $role = $team->pivot->role ?? null;
+                                    $roleLabel = $role ? ucfirst($role) : 'Sin membresía';
+                                    $roleBadge = match ($role) {
+                                        'owner' => 'danger',
+                                        'admin' => 'warning',
+                                        'observer' => 'info',
+                                        'member' => 'success',
+                                        default => 'secondary',
+                                    };
+                                @endphp
+                                <span class="badge badge-{{ $roleBadge }}">
+                                    {{ $roleLabel }}
                                 </span>
                                 <span class="text-sm text-gray-500">
                                     Owner: {{ $team->owner->name }}

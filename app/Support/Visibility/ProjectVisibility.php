@@ -6,6 +6,7 @@ use App\Models\Project;
 use App\Models\Team;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ProjectVisibility
 {
@@ -37,7 +38,7 @@ class ProjectVisibility
         });
     }
 
-    public static function visibleProjectsForTeam(User $user, Team $team): Builder
+    public static function visibleProjectsForTeam(User $user, Team $team): HasMany
     {
         if ($user->isSuperadmin()) {
             return $team->projects();

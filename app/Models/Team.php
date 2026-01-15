@@ -86,6 +86,10 @@ class Team extends Model
      */
     public function hasMember(User $user): bool
     {
+        if ($this->owner_id === $user->id) {
+            return true;
+        }
+
         return $this->users()->where('user_id', $user->id)->exists();
     }
 
@@ -94,6 +98,10 @@ class Team extends Model
      */
     public function getUserRole(User $user): ?string
     {
+        if ($this->owner_id === $user->id) {
+            return 'owner';
+        }
+
         $pivot = $this->users()->where('user_id', $user->id)->first();
         return $pivot ? $pivot->pivot->role : null;
     }
