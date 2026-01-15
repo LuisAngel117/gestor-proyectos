@@ -94,6 +94,7 @@
                             <option value="en_espera" {{ old('status') == 'en_espera' ? 'selected' : '' }}>En Espera</option>
                             <option value="completado" {{ old('status') == 'completado' ? 'selected' : '' }}>Completado</option>
                             <option value="cancelado" {{ old('status') == 'cancelado' ? 'selected' : '' }}>Cancelado</option>
+                            <option value="archivado" {{ old('status') == 'archivado' ? 'selected' : '' }}>Archivado</option>
                         </select>
                         @error('status')
                             <p class="form-error">{{ $message }}</p>

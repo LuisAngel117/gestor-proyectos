@@ -3,10 +3,19 @@
 namespace App\Policies;
 
 use App\Models\Project;
+use App\Models\Team;
 use App\Models\User;
 
 class ProjectPolicy
 {
+    /**
+     * Superadmin override.
+     */
+    public function before(User $user, string $ability): ?bool
+    {
+        return $user->isSuperadmin() ? true : null;
+    }
+
     /**
      * Determine if the user can view any projects.
      */
@@ -21,26 +30,24 @@ class ProjectPolicy
      */
     public function view(User $user, Project $project): bool
     {
-        // Superadmin puede ver todo
-        if ($user->isSuperadmin()) {
+        // Miembro del proyecto puede verlo
+        if ($user->roleInProject($project->id) !== null) {
             return true;
         }
 
-        // Miembro del proyecto puede verlo
-        return $user->roleInProject($project->id) !== null;
+        // Admin u owner del team puede verlo (visión administrativa)
+        return in_array($user->roleInTeam($project->team_id), ['owner', 'admin']);
     }
 
     /**
      * Determine if the user can create projects.
      */
-    public function create(User $user): bool
+    public function create(User $user, ?Team $team = null): bool
     {
-        // Superadmin puede crear
-        if ($user->isSuperadmin()) {
-            return true;
+        if ($team) {
+            return in_array($user->roleInTeam($team->id), ['owner', 'admin']);
         }
 
-        // Usuario debe ser owner o admin de al menos un equipo
         return $user->teams()
             ->wherePivotIn('role', ['owner', 'admin'])
             ->exists();
@@ -51,11 +58,6 @@ class ProjectPolicy
      */
     public function update(User $user, Project $project): bool
     {
-        // Superadmin puede actualizar
-        if ($user->isSuperadmin()) {
-            return true;
-        }
-
         // Owner o admin del proyecto pueden actualizar
         $role = $user->roleInProject($project->id);
         return in_array($role, ['owner', 'admin']);
@@ -66,11 +68,6 @@ class ProjectPolicy
      */
     public function delete(User $user, Project $project): bool
     {
-        // Superadmin puede eliminar
-        if ($user->isSuperadmin()) {
-            return true;
-        }
-
         // Solo el owner del proyecto puede eliminarlo
         return $user->roleInProject($project->id) === 'owner';
     }
@@ -80,11 +77,6 @@ class ProjectPolicy
      */
     public function manageMembers(User $user, Project $project): bool
     {
-        // Superadmin puede gestionar miembros
-        if ($user->isSuperadmin()) {
-            return true;
-        }
-
         // Owner o admin pueden gestionar miembros
         $role = $user->roleInProject($project->id);
         return in_array($role, ['owner', 'admin']);
@@ -95,11 +87,6 @@ class ProjectPolicy
      */
     public function manageSprints(User $user, Project $project): bool
     {
-        // Superadmin puede gestionar sprints
-        if ($user->isSuperadmin()) {
-            return true;
-        }
-
         // Owner o admin pueden gestionar sprints
         $role = $user->roleInProject($project->id);
         return in_array($role, ['owner', 'admin']);
@@ -110,11 +97,6 @@ class ProjectPolicy
      */
     public function export(User $user, Project $project): bool
     {
-        // Superadmin puede exportar
-        if ($user->isSuperadmin()) {
-            return true;
-        }
-
         // Cualquier miembro puede exportar (excepto guests si existen)
         return $user->roleInProject($project->id) !== null;
     }
@@ -124,11 +106,6 @@ class ProjectPolicy
      */
     public function attachFiles(User $user, Project $project): bool
     {
-        // Superadmin puede adjuntar
-        if ($user->isSuperadmin()) {
-            return true;
-        }
-
         // Owner, admin y member pueden adjuntar archivos
         $role = $user->roleInProject($project->id);
         return in_array($role, ['owner', 'admin', 'member']);
@@ -139,11 +116,6 @@ class ProjectPolicy
      */
     public function comment(User $user, Project $project): bool
     {
-        // Superadmin puede comentar
-        if ($user->isSuperadmin()) {
-            return true;
-        }
-
         // Owner, admin y member pueden comentar
         $role = $user->roleInProject($project->id);
         return in_array($role, ['owner', 'admin', 'member']);
