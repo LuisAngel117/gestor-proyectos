@@ -190,6 +190,7 @@ class Project extends Model
             'en_espera' => 'En Espera',
             'completado' => 'Completado',
             'cancelado' => 'Cancelado',
+            'archivado' => 'Archivado',
         ];
 
         return $labels[$this->status] ?? $this->status;
@@ -221,6 +222,7 @@ class Project extends Model
             'en_espera' => 'warning',
             'completado' => 'success',
             'cancelado' => 'danger',
+            'archivado' => 'secondary',
         ];
 
         return $colors[$this->status] ?? 'secondary';

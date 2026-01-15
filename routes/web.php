@@ -38,6 +38,8 @@ Route::middleware('auth')->group(function () {
 
     // Rutas de proyectos
     Route::resource('projects', \App\Http\Controllers\ProjectController::class);
+    Route::patch('projects/{project}/owner', [\App\Http\Controllers\ProjectController::class, 'transferOwner'])
+        ->name('projects.transfer-owner');
 });
 
 require __DIR__.'/auth.php';
