@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Project;
 use App\Models\Team;
+use App\Support\Catalog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
@@ -80,8 +81,8 @@ class ProjectController extends Controller
             'team_id' => ['required', 'exists:teams,id'],
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:2000'],
-            'status' => ['required', Rule::in(['planificacion', 'en_progreso', 'en_espera', 'completado', 'cancelado'])],
-            'priority' => ['required', Rule::in(['baja', 'media', 'alta', 'urgente'])],
+            'status' => ['required', Rule::in(Catalog::projectStatuses())],
+            'priority' => ['required', Rule::in(Catalog::projectPriorities())],
             'start_date' => ['nullable', 'date'],
             'due_date' => ['nullable', 'date', 'after_or_equal:start_date'],
             'estimated_hours' => ['nullable', 'numeric', 'min:0', 'max:9999.99'],
@@ -157,8 +158,8 @@ class ProjectController extends Controller
             'team_id' => ['nullable', 'exists:teams,id'],
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:2000'],
-            'status' => ['required', Rule::in(['planificacion', 'en_progreso', 'en_espera', 'completado', 'cancelado'])],
-            'priority' => ['required', Rule::in(['baja', 'media', 'alta', 'urgente'])],
+            'status' => ['required', Rule::in(Catalog::projectStatuses())],
+            'priority' => ['required', Rule::in(Catalog::projectPriorities())],
             'start_date' => ['nullable', 'date'],
             'due_date' => ['nullable', 'date', 'after_or_equal:start_date'],
             'estimated_hours' => ['nullable', 'numeric', 'min:0', 'max:9999.99'],
