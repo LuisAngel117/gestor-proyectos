@@ -1,0 +1,61 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Project;
+use App\Models\Sprint;
+use Illuminate\Http\RedirectResponse;
+
+class SprintStateController extends Controller
+{
+    public function start(Project $project, Sprint $sprint): RedirectResponse
+    {
+        $this->authorize('startSprint', $sprint);
+
+        if (!$sprint->isPlanning()) {
+            return back()->withErrors([
+                'status' => 'El sprint debe estar en planificación para iniciar.',
+            ]);
+        }
+
+        $hasActiveSprint = $project->sprints()
+            ->where('status', 'activo')
+            ->where('id', '!=', $sprint->id)
+            ->exists();
+
+        if ($hasActiveSprint) {
+            return back()->withErrors([
+                'status' => 'Ya existe un sprint activo en este proyecto.',
+            ]);
+        }
+
+        $sprint->update([
+            'status' => 'activo',
+            'started_at' => now(),
+        ]);
+
+        return redirect()
+            ->route('sprints.show', [$project, $sprint])
+            ->with('success', 'Sprint iniciado correctamente.');
+    }
+
+    public function close(Project $project, Sprint $sprint): RedirectResponse
+    {
+        $this->authorize('closeSprint', $sprint);
+
+        if (!$sprint->isActive()) {
+            return back()->withErrors([
+                'status' => 'El sprint debe estar activo para cerrarlo.',
+            ]);
+        }
+
+        $sprint->update([
+            'status' => 'cerrado',
+            'closed_at' => now(),
+        ]);
+
+        return redirect()
+            ->route('sprints.show', [$project, $sprint])
+            ->with('success', 'Sprint cerrado correctamente.');
+    }
+}

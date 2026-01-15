@@ -18,6 +18,7 @@ Este documento describe el flujo de planificación del sprint backlog a partir d
 
 - `plan` y `reorderBacklog`: solo **owner/admin** (proyecto o team) y superadmin.
 - `view`: cualquier usuario que pueda ver el proyecto.
+- La planificación solo está disponible si el sprint está en `planificacion`.
 
 ## Orden dentro del sprint
 

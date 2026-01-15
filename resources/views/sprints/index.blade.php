@@ -29,7 +29,11 @@
                     <div class="card-body">
                         <div class="flex items-start justify-between mb-2">
                             <div>
-                                <h3 class="font-semibold text-gray-900">{{ $sprint->name }}</h3>
+                                <h3 class="font-semibold text-gray-900">
+                                    <a href="{{ route('sprints.show', [$project, $sprint]) }}" class="hover:text-primary-600">
+                                        {{ $sprint->name }}
+                                    </a>
+                                </h3>
                                 <p class="text-xs text-gray-500">
                                     {{ $sprint->start_date->format('d/m/Y') }} → {{ $sprint->end_date->format('d/m/Y') }}
                                 </p>
@@ -42,13 +46,18 @@
                             <span>{{ $sprint->backlog_items_count }} ítems</span>
                         </div>
 
-                        @can('plan', $sprint)
                         <div class="mt-4 flex space-x-2">
-                            <a href="{{ route('sprints.plan', [$project, $sprint]) }}" class="btn-primary text-xs py-1 px-3">
-                                Planificar
+                            <a href="{{ route('sprints.show', [$project, $sprint]) }}" class="btn-secondary text-xs py-1 px-3">
+                                Ver detalles
                             </a>
+                            @can('plan', $sprint)
+                                @if($sprint->isPlanning())
+                                    <a href="{{ route('sprints.plan', [$project, $sprint]) }}" class="btn-primary text-xs py-1 px-3">
+                                        Planificar
+                                    </a>
+                                @endif
+                            @endcan
                         </div>
-                        @endcan
                     </div>
                 </div>
             @endforeach

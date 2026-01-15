@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Project;
+use App\Models\Sprint;
 use Illuminate\View\View;
 
 class SprintController extends Controller
@@ -19,6 +20,18 @@ class SprintController extends Controller
         return view('sprints.index', [
             'project' => $project,
             'sprints' => $sprints,
+        ]);
+    }
+
+    public function show(Project $project, Sprint $sprint): View
+    {
+        $this->authorize('view', $sprint);
+
+        $sprint->loadCount('backlogItems');
+
+        return view('sprints.show', [
+            'project' => $project,
+            'sprint' => $sprint,
         ]);
     }
 }
