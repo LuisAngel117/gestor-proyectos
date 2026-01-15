@@ -77,47 +77,23 @@ class ProjectPolicy
      */
     public function manageMembers(User $user, Project $project): bool
     {
-        // Owner o admin pueden gestionar miembros
         $role = $user->roleInProject($project->id);
-        return in_array($role, ['owner', 'admin']);
+        return in_array($role, ['owner', 'admin'], true);
     }
 
     /**
-     * Determine if the user can manage sprints in the project.
+     * Determine if the user can transfer project ownership.
      */
-    public function manageSprints(User $user, Project $project): bool
+    public function transferOwnership(User $user, Project $project): bool
     {
-        // Owner o admin pueden gestionar sprints
-        $role = $user->roleInProject($project->id);
-        return in_array($role, ['owner', 'admin']);
+        return $user->roleInProject($project->id) === 'owner';
     }
 
     /**
-     * Determine if the user can export data from the project.
+     * Block changing the project team (postponed).
      */
-    public function export(User $user, Project $project): bool
+    public function changeTeam(User $user, Project $project): bool
     {
-        // Cualquier miembro puede exportar (excepto guests si existen)
-        return $user->roleInProject($project->id) !== null;
-    }
-
-    /**
-     * Determine if the user can attach files to the project.
-     */
-    public function attachFiles(User $user, Project $project): bool
-    {
-        // Owner, admin y member pueden adjuntar archivos
-        $role = $user->roleInProject($project->id);
-        return in_array($role, ['owner', 'admin', 'member']);
-    }
-
-    /**
-     * Determine if the user can comment on the project.
-     */
-    public function comment(User $user, Project $project): bool
-    {
-        // Owner, admin y member pueden comentar
-        $role = $user->roleInProject($project->id);
-        return in_array($role, ['owner', 'admin', 'member']);
+        return false;
     }
 }

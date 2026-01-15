@@ -68,22 +68,4 @@ class TeamPolicy
         // Owner o admin pueden gestionar miembros
         return $team->userCan($user, 'manageMembers');
     }
-
-    /**
-     * Determine if the user can create projects in the team.
-     */
-    public function createProject(User $user, Team $team): bool
-    {
-        // Owner o admin pueden crear proyectos
-        return $team->userCan($user, 'createProject');
-    }
-
-    /**
-     * Determine if the user can view reports of the team.
-     */
-    public function viewReports(User $user, Team $team): bool
-    {
-        // Cualquier miembro puede ver reportes
-        return $team->hasMember($user);
-    }
 }

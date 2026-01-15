@@ -26,6 +26,7 @@ return [
         'delete',
         'comment',
         'manageMembers',
+        'transferOwnership',
         'manageDependencies',
         'registerTime',
         'attachFiles',

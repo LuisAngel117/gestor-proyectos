@@ -10,6 +10,7 @@ Este documento define el listado oficial de acciones que deben ser autorizables 
 - `delete`
 - `comment`
 - `manageMembers`
+- `transferOwnership`
 - `manageDependencies`
 - `registerTime`
 - `attachFiles`
