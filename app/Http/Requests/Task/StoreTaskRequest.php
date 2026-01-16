@@ -25,6 +25,7 @@ class StoreTaskRequest extends FormRequest
             'description' => ['nullable', 'string'],
             'status' => ['required', 'string', 'max:50'],
             'priority' => ['required', Rule::in(['baja', 'media', 'alta', 'urgente'])],
+            'estimated_hours' => ['nullable', 'numeric', 'min:0', 'max:999.99', 'decimal:0,2'],
             'parent_id' => ['nullable', 'integer', Rule::exists('tasks', 'id')->whereNull('deleted_at')],
         ];
     }
