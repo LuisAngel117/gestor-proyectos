@@ -27,7 +27,17 @@ class Task extends Model
         'description',
         'status',
         'priority',
+        'estimated_hours',
         'created_by',
+    ];
+
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'estimated_hours' => 'decimal:2',
     ];
 
     public function project(): BelongsTo
