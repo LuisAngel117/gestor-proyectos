@@ -7,6 +7,8 @@ use App\Http\Controllers\ProjectOwnershipController;
 use App\Http\Controllers\SprintController;
 use App\Http\Controllers\SprintPlanningController;
 use App\Http\Controllers\SprintStateController;
+use App\Http\Controllers\TaskChecklistItemController;
+use App\Http\Controllers\TaskDependencyController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -80,6 +82,22 @@ Route::middleware('auth')->group(function () {
                 ->name('backlog.destroy');
             Route::post('projects/{project}/backlog/reorder', [BacklogItemController::class, 'reorder'])
                 ->name('backlog.reorder');
+
+            Route::get('projects/{project}/tasks/{task}/dependencies', [TaskDependencyController::class, 'index'])
+                ->name('tasks.dependencies.index');
+            Route::post('projects/{project}/tasks/{task}/dependencies', [TaskDependencyController::class, 'store'])
+                ->name('tasks.dependencies.store');
+            Route::delete('projects/{project}/tasks/{task}/dependencies/{dependsOnTask}', [TaskDependencyController::class, 'destroy'])
+                ->name('tasks.dependencies.destroy');
+
+            Route::post('projects/{project}/tasks/{task}/checklist', [TaskChecklistItemController::class, 'store'])
+                ->name('tasks.checklist.store');
+            Route::patch('projects/{project}/tasks/{task}/checklist/{item}', [TaskChecklistItemController::class, 'update'])
+                ->name('tasks.checklist.update');
+            Route::delete('projects/{project}/tasks/{task}/checklist/{item}', [TaskChecklistItemController::class, 'destroy'])
+                ->name('tasks.checklist.destroy');
+            Route::post('projects/{project}/tasks/{task}/checklist/reorder', [TaskChecklistItemController::class, 'reorder'])
+                ->name('tasks.checklist.reorder');
         });
 
         Route::get('projects/{project}/members', [ProjectMemberController::class, 'index'])

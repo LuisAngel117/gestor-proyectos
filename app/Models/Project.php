@@ -110,6 +110,14 @@ class Project extends Model
     }
 
     /**
+     * Get tasks for the project.
+     */
+    public function tasks(): HasMany
+    {
+        return $this->hasMany(Task::class);
+    }
+
+    /**
      * Get the owner of the project.
      */
     public function owner()
