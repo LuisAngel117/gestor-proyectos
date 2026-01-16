@@ -66,6 +66,14 @@ class Sprint extends Model
         return $this->hasMany(BacklogItem::class)->orderBy('sprint_position');
     }
 
+    /**
+     * Get tasks assigned to the sprint.
+     */
+    public function tasks(): HasMany
+    {
+        return $this->hasMany(Task::class);
+    }
+
     public function isPlanning(): bool
     {
         return $this->status === 'planificacion';
