@@ -1,13 +1,10 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
-@section('title', 'Backlog - ' . $project->name)
-
-@section('content')
-<x-slot name="header">
-    <div class="flex flex-wrap justify-between items-center gap-3">
+@section('header')
+<div class="flex flex-wrap justify-between items-center gap-3">
         <div>
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                Backlog · {{ $project->name }}
+                Backlog — {{ $project->name }}
             </h2>
             <p class="text-sm text-gray-600 mt-1">Prioriza el trabajo pendiente del proyecto.</p>
         </div>
@@ -25,7 +22,11 @@
             </a>
         </div>
     </div>
-</x-slot>
+@endsection
+@section('title', 'Backlog - ' . $project->name)
+
+@section('content')
+
 
 <div class="space-y-6">
     @if($errors->any())
@@ -131,3 +132,4 @@
     @endif
 </div>
 @endsection
+

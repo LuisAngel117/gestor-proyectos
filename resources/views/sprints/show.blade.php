@@ -1,10 +1,7 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
-@section('title', 'Sprint - ' . $sprint->name)
-
-@section('content')
-<x-slot name="header">
-    <div class="flex flex-wrap justify-between items-center gap-3">
+@section('header')
+<div class="flex flex-wrap justify-between items-center gap-3">
         <div>
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                 {{ $sprint->name }}
@@ -22,7 +19,11 @@
             <a href="{{ route('sprints.index', $project) }}" class="btn-secondary">Volver</a>
         </div>
     </div>
-</x-slot>
+@endsection
+@section('title', 'Sprint - ' . $sprint->name)
+
+@section('content')
+
 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     <div class="lg:col-span-2">
@@ -74,7 +75,7 @@
                     <div class="card-body">
                         <h3 class="text-sm font-semibold text-gray-900 mb-2">Iniciar sprint</h3>
                         <p class="text-xs text-gray-500 mb-4">
-                            Verifica que el backlog del sprint esté listo antes de iniciar.
+                            Verifica que el backlog del sprint está listo antes de iniciar.
                         </p>
                         <button type="submit" class="btn-primary w-full">Iniciar sprint</button>
                     </div>
@@ -99,3 +100,4 @@
     </div>
 </div>
 @endsection
+

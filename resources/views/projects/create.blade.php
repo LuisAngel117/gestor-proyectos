@@ -1,10 +1,7 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
-@section('title', 'Crear Proyecto')
-
-@section('content')
-<x-slot name="header">
-    <div class="flex justify-between items-center">
+@section('header')
+<div class="flex justify-between items-center">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
             {{ __('Crear Nuevo Proyecto') }}
         </h2>
@@ -15,7 +12,11 @@
             Volver
         </a>
     </div>
-</x-slot>
+@endsection
+@section('title', 'Crear Proyecto')
+
+@section('content')
+
 
 <div class="max-w-3xl mx-auto">
     <div class="card">
@@ -26,23 +27,38 @@
                 <!-- Equipo -->
                 <div class="mb-6">
                     <label for="team_id" class="form-label">Equipo *</label>
-                    <select
-                        id="team_id"
-                        name="team_id"
-                        class="form-input w-full @error('team_id') border-red-500 @enderror"
-                        required
-                    >
-                        <option value="">Selecciona un equipo</option>
-                        @foreach($teams as $team)
-                        <option value="{{ $team->id }}" {{ old('team_id', $teamId) == $team->id ? 'selected' : '' }}>
-                            {{ $team->name }}
-                        </option>
-                        @endforeach
-                    </select>
+                    @php
+                        $selectedTeam = $teamId ? $teams->firstWhere('id', (int) $teamId) : null;
+                    @endphp
+                    @if($selectedTeam)
+                        <input type="hidden" name="team_id" value="{{ $selectedTeam->id }}">
+                        <input
+                            type="text"
+                            class="form-input w-full bg-gray-100"
+                            value="{{ $selectedTeam->name }}"
+                            disabled
+                        >
+                    @else
+                        <select
+                            id="team_id"
+                            name="team_id"
+                            class="form-input w-full @error('team_id') border-red-500 @enderror"
+                            required
+                        >
+                            <option value="">Selecciona un equipo</option>
+                            @foreach($teams as $team)
+                            <option value="{{ $team->id }}" {{ old('team_id', $teamId) == $team->id ? 'selected' : '' }}>
+                                {{ $team->name }}
+                            </option>
+                            @endforeach
+                        </select>
+                    @endif
                     @error('team_id')
                         <p class="form-error">{{ $message }}</p>
                     @enderror
-                    <p class="text-xs text-gray-500 mt-1">Selecciona el equipo al que pertenecerá este proyecto</p>
+                    <p class="text-xs text-gray-500 mt-1">
+                        {{ $selectedTeam ? 'Equipo seleccionado desde el contexto actual.' : 'Selecciona el equipo al que pertenecerá este proyecto' }}
+                    </p>
                 </div>
 
                 <!-- Nombre del proyecto -->
@@ -209,3 +225,4 @@
     </div>
 </div>
 @endsection
+

@@ -90,14 +90,20 @@ class ProfilesSeeder extends Seeder
         ];
 
         foreach ($users as $index => $user) {
-            Profile::create([
-                'user_id' => $user->id,
-                'cargo' => $profilesData[$index]['cargo'],
-                'departamento' => $profilesData[$index]['departamento'],
-                'id_universitario' => $profilesData[$index]['id_universitario'],
-                'telefono' => $profilesData[$index]['telefono'],
-                'bio' => $profilesData[$index]['bio'],
-            ]);
+            if (!isset($profilesData[$index])) {
+                continue;
+            }
+
+            Profile::updateOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'cargo' => $profilesData[$index]['cargo'],
+                    'departamento' => $profilesData[$index]['departamento'],
+                    'id_universitario' => $profilesData[$index]['id_universitario'],
+                    'telefono' => $profilesData[$index]['telefono'],
+                    'bio' => $profilesData[$index]['bio'],
+                ]
+            );
         }
 
         $this->command->info('✅ 10 perfiles creados exitosamente');

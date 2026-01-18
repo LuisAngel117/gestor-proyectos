@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Http\Controllers;
 
@@ -35,7 +35,7 @@ class SprintStateController extends Controller
         ]);
 
         return redirect()
-            ->route('sprints.show', [$project, $sprint])
+            ->to(route('projects.show', $project) . '#project-assistant')
             ->with('success', 'Sprint iniciado correctamente.');
     }
 

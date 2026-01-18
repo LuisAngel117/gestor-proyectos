@@ -18,6 +18,7 @@ class ProjectController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
+        $search = $request->string('q')->trim()->toString();
 
         // Filtrar por equipo si se proporciona
         $teamId = $request->get('team');
@@ -26,20 +27,43 @@ class ProjectController extends Controller
             $team = Team::findOrFail($teamId);
             $this->authorize('view', $team);
 
-            $projects = ProjectVisibility::visibleProjectsForTeam($user, $team)
-                ->with(['team', 'creator', 'members'])
-                ->latest()
-                ->paginate(12);
+            $projectsQuery = ProjectVisibility::visibleProjectsForTeam($user, $team);
         } else {
-            $projects = ProjectVisibility::visibleProjectsFor($user)
-                ->with(['team', 'creator', 'members'])
-                ->latest()
-                ->paginate(12);
+            $projectsQuery = ProjectVisibility::visibleProjectsFor($user);
         }
 
-        $userTeams = $user->teams;
+        $projectsQuery->with(['team', 'creator', 'members']);
 
-        return view('projects.index', compact('projects', 'userTeams', 'teamId'));
+        if ($search !== '') {
+            $projectsQuery->where(function ($query) use ($search) {
+                $query->where('name', 'like', '%' . $search . '%')
+                    ->orWhereHas('team', function ($teamQuery) use ($search) {
+                        $teamQuery->where('name', 'like', '%' . $search . '%');
+                    })
+                    ->orWhereHas('creator', function ($creatorQuery) use ($search) {
+                        $creatorQuery->where('name', 'like', '%' . $search . '%')
+                            ->orWhere('apellido', 'like', '%' . $search . '%')
+                            ->orWhere('email', 'like', '%' . $search . '%');
+                    });
+            });
+        }
+
+        $projects = $projectsQuery
+            ->latest()
+            ->paginate(12)
+            ->appends($request->query());
+
+        $userTeams = $user->isSuperadmin()
+            ? Team::orderBy('name')->get()
+            : $user->teams;
+
+        return view('projects.index', [
+            'projects' => $projects,
+            'userTeams' => $userTeams,
+            'teamId' => $teamId,
+            'search' => $search,
+            'isSuperadmin' => $user->isSuperadmin(),
+        ]);
     }
 
     /**
@@ -129,7 +153,8 @@ class ProjectController extends Controller
     {
         $this->authorize('view', $project);
 
-        $project->load(['team.users', 'creator', 'members', 'sprints']);
+        $project->load(['team.users', 'creator', 'members', 'sprints'])
+            ->loadCount(['tasks', 'backlogItems']);
 
         $availableMembers = $project->team->users
             ->filter(fn ($user) => !$project->members->contains($user))
@@ -138,6 +163,8 @@ class ProjectController extends Controller
         return view('projects.show', [
             'project' => $project,
             'availableMembers' => $availableMembers,
+            'planningSprint' => $project->sprints->firstWhere('status', 'planificacion'),
+            'activeSprint' => $project->sprints->firstWhere('status', 'activo'),
         ]);
     }
 

@@ -1,10 +1,7 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
-@section('title', 'Mi Perfil')
-
-@section('content')
-<x-slot name="header">
-    <div class="flex justify-between items-center">
+@section('header')
+<div class="flex justify-between items-center">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
             {{ __('Mi Perfil') }}
         </h2>
@@ -15,7 +12,11 @@
             Editar Perfil
         </a>
     </div>
-</x-slot>
+@endsection
+@section('title', 'Mi Perfil')
+
+@section('content')
+
 
 <div class="space-y-6">
     <!-- Información del Usuario -->
@@ -119,3 +120,4 @@
     </div>
 </div>
 @endsection
+

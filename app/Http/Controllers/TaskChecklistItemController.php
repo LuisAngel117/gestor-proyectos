@@ -18,7 +18,7 @@ class TaskChecklistItemController extends Controller
         Project $project,
         Task $task,
         StoreChecklistItemRequest $request
-    ): RedirectResponse {
+    ): RedirectResponse|\Illuminate\Http\JsonResponse {
         $this->ensureProjectTaskConsistency($project, $task);
         $this->authorize('update', $task);
 
@@ -27,7 +27,7 @@ class TaskChecklistItemController extends Controller
 
         $isCompleted = $request->boolean('is_completed');
 
-        $task->checklistItems()->create([
+        $item = $task->checklistItems()->create([
             'content' => $request->string('content')->toString(),
             'position' => $position,
             'is_completed' => $isCompleted,
@@ -35,6 +35,13 @@ class TaskChecklistItemController extends Controller
             'completed_by' => $isCompleted ? Auth::id() : null,
             'created_by' => Auth::id(),
         ]);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Checklist agregado.',
+                'item' => $item,
+            ], 201);
+        }
 
         return back()->with('success', 'Checklist agregado.');
     }
@@ -44,7 +51,7 @@ class TaskChecklistItemController extends Controller
         Task $task,
         TaskChecklistItem $item,
         UpdateChecklistItemRequest $request
-    ): RedirectResponse {
+    ): RedirectResponse|\Illuminate\Http\JsonResponse {
         $this->ensureProjectTaskConsistency($project, $task);
         $this->ensureTaskChecklistConsistency($task, $item);
         $this->authorize('update', $task);
@@ -66,10 +73,17 @@ class TaskChecklistItemController extends Controller
             $item->update($payload);
         }
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Checklist actualizado.',
+                'item' => $item->refresh(),
+            ]);
+        }
+
         return back()->with('success', 'Checklist actualizado.');
     }
 
-    public function destroy(Project $project, Task $task, TaskChecklistItem $item): RedirectResponse
+    public function destroy(Project $project, Task $task, TaskChecklistItem $item): RedirectResponse|\Illuminate\Http\JsonResponse
     {
         $this->ensureProjectTaskConsistency($project, $task);
         $this->ensureTaskChecklistConsistency($task, $item);
@@ -78,6 +92,12 @@ class TaskChecklistItemController extends Controller
         $item->delete();
         $this->normalizePositions($task);
 
+        if (request()->expectsJson()) {
+            return response()->json([
+                'message' => 'Checklist eliminado.',
+            ]);
+        }
+
         return back()->with('success', 'Checklist eliminado.');
     }
 
@@ -85,7 +105,7 @@ class TaskChecklistItemController extends Controller
         Project $project,
         Task $task,
         ReorderChecklistItemsRequest $request
-    ): RedirectResponse {
+    ): RedirectResponse|\Illuminate\Http\JsonResponse {
         $this->ensureProjectTaskConsistency($project, $task);
         $this->authorize('update', $task);
 
@@ -99,9 +119,14 @@ class TaskChecklistItemController extends Controller
         $sortedProvided = $providedIds;
         sort($sortedProvided);
 
-        if ($existingIds !== $sortedProvided) {
+        if ($existingIds != $sortedProvided) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'El reordenamiento debe incluir todos los items del checklist.',
+                ], 422);
+            }
             return back()->withErrors([
-                'ordered_ids' => 'El reordenamiento debe incluir todos los ítems del checklist.',
+                'ordered_ids' => 'El reordenamiento debe incluir todos los items del checklist.',
             ]);
         }
 
@@ -113,6 +138,13 @@ class TaskChecklistItemController extends Controller
                 }
             }
         });
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Checklist reordenado.',
+                'ordered_ids' => $orderedIds,
+            ]);
+        }
 
         return back()->with('success', 'Checklist reordenado.');
     }

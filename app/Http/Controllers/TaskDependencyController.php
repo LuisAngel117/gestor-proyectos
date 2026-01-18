@@ -31,23 +31,39 @@ class TaskDependencyController extends Controller
         Project $project,
         Task $task,
         StoreTaskDependencyRequest $request
-    ): RedirectResponse {
+    ): RedirectResponse|\Illuminate\Http\JsonResponse {
         $this->ensureProjectTaskConsistency($project, $task);
         $this->authorize('manageDependencies', $task);
 
         $dependsOn = Task::query()->findOrFail($request->validated()['depends_on_task_id']);
         $this->dependencyService->addDependency($task, $dependsOn);
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Dependencia agregada.',
+                'task_id' => $task->id,
+                'depends_on_task_id' => $dependsOn->id,
+            ], 201);
+        }
+
         return back()->with('success', 'Dependencia agregada.');
     }
 
-    public function destroy(Project $project, Task $task, Task $dependsOnTask): RedirectResponse
+    public function destroy(Project $project, Task $task, Task $dependsOnTask): RedirectResponse|\Illuminate\Http\JsonResponse
     {
         $this->ensureProjectTaskConsistency($project, $task);
         $this->ensureProjectTaskConsistency($project, $dependsOnTask);
         $this->authorize('manageDependencies', $task);
 
         $this->dependencyService->removeDependency($task, $dependsOnTask);
+
+        if (request()->expectsJson()) {
+            return response()->json([
+                'message' => 'Dependencia eliminada.',
+                'task_id' => $task->id,
+                'depends_on_task_id' => $dependsOnTask->id,
+            ]);
+        }
 
         return back()->with('success', 'Dependencia eliminada.');
     }

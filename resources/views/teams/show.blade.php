@@ -1,103 +1,203 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('title', $team->name)
 
-@section('content')
-<x-slot name="header">
-    <div class="flex flex-wrap justify-between items-center gap-4">
+@section('header')
+    <div class="flex flex-wrap justify-between items-center gap-3">
         <div>
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                {{ $team->name }}
-            </h2>
-            <p class="text-sm text-gray-600 mt-1">
-                Owner: {{ $team->owner->full_name }} • {{ $team->users->count() }} miembros
-            </p>
+            <h2 class="font-semibold text-xl text-gray-800 leading-tight">{{ $team->name }}</h2>
+            <p class="text-sm text-gray-600 mt-1">Owner: {{ $team->owner?->full_name }}</p>
         </div>
         <div class="flex gap-2">
-            @can('create', [\App\Models\Project::class, $team])
-            <a href="{{ route('projects.create', ['team' => $team->id]) }}" class="btn-primary">
-                <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                </svg>
-                Nuevo Proyecto
-            </a>
+            <a href="{{ route('teams.index') }}" class="btn-secondary">Volver</a>
+            @can('update', $team)
+                <a href="{{ route('teams.edit', $team) }}" class="btn-secondary">Editar</a>
             @endcan
-            <a href="{{ route('teams.index') }}" class="btn-secondary">
-                <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                </svg>
-                Volver
-            </a>
         </div>
     </div>
-</x-slot>
+@endsection
 
+@section('content')
 <div class="space-y-6">
+    @php
+        $hasTeamMembers = $team->users->count() > 1;
+        $hasProjects = $projects->total() > 0;
+    @endphp
     <div class="card">
         <div class="card-body">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Proyectos del equipo</h3>
-            @if($projects->count() > 0)
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    @foreach($projects as $project)
-                        <div class="card hover:shadow-lg transition">
-                            <div class="card-body">
-                                <div class="flex items-start justify-between mb-3">
-                                    <div class="flex-1">
-                                        <h4 class="font-semibold text-lg text-gray-900 mb-1">
-                                            <a href="{{ route('projects.show', $project) }}" class="hover:text-primary-600">
-                                                {{ $project->name }}
-                                            </a>
-                                        </h4>
-                                        <p class="text-xs text-gray-500">
-                                            Creado por {{ $project->creator->full_name }}
-                                        </p>
-                                    </div>
-                                    <span class="badge badge-{{ $project->priority_color }}">
-                                        {{ $project->priority_label }}
-                                    </span>
-                                </div>
+            <h3 class="text-sm font-semibold text-gray-900 mb-2">Asistente de equipo</h3>
+            <p class="text-sm text-gray-600 mb-4">Sigue estos pasos para crear tu flujo de trabajo.</p>
+            <ol class="space-y-2 text-sm">
+                <li class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span>1. Agregar miembros al equipo</span>
+                        @if($hasTeamMembers)
+                            <span class="inline-flex items-center gap-1 text-xs font-medium text-emerald-600">
+                                <svg class="w-4 h-4 animate-pulse" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M16.704 5.293a1 1 0 010 1.414l-7.5 7.5a1 1 0 01-1.414 0l-3.5-3.5a1 1 0 111.414-1.414L8.5 12.086l6.793-6.793a1 1 0 011.411 0z" clip-rule="evenodd"/>
+                                </svg>
+                                Listo
+                            </span>
+                        @else
+                            <span class="text-xs text-gray-500">Pendiente</span>
+                        @endif
+                    </div>
+                    <a href="#team-members" class="btn-secondary text-xs">Ir</a>
+                </li>
+                <li class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span>2. Crear un proyecto en este equipo</span>
+                        @if($hasProjects)
+                            <span class="inline-flex items-center gap-1 text-xs font-medium text-emerald-600">
+                                <svg class="w-4 h-4 animate-pulse" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M16.704 5.293a1 1 0 010 1.414l-7.5 7.5a1 1 0 01-1.414 0l-3.5-3.5a1 1 0 111.414-1.414L8.5 12.086l6.793-6.793a1 1 0 011.411 0z" clip-rule="evenodd"/>
+                                </svg>
+                                Listo
+                            </span>
+                        @else
+                            <span class="text-xs text-gray-500">Pendiente</span>
+                        @endif
+                    </div>
+                    <a href="{{ route('projects.create', ['team' => $team->id]) }}" class="btn-secondary text-xs">Crear proyecto</a>
+                </li>
+                <li class="flex items-center justify-between">
+                    <span>3. Abrir un proyecto y continuar el flujo</span>
+                    @if($hasProjects)
+                        <a href="{{ route('projects.show', $projects->first()) }}" class="btn-secondary text-xs">Abrir proyecto</a>
+                    @else
+                        <span class="text-xs text-gray-500">Crea un proyecto primero</span>
+                    @endif
+                </li>
+            </ol>
+        </div>
+    </div>
 
-                                <p class="text-sm text-gray-600 mb-4 line-clamp-2">
-                                    {{ $project->description ?? 'Sin descripción' }}
-                                </p>
+    <div class="card">
+        <div class="card-body">
+            <h3 class="text-sm font-semibold text-gray-900 mb-2">Descripcion</h3>
+            <p class="text-sm text-gray-600">{{ $team->description ?? 'Sin descripcion' }}</p>
+        </div>
+    </div>
 
-                                <div class="flex items-center justify-between mb-4">
-                                    <span class="badge badge-{{ $project->status_color }}">
-                                        {{ $project->status_label }}
-                                    </span>
-                                    <span class="text-xs text-gray-500">
-                                        {{ $project->members->count() }} miembros
-                                    </span>
-                                </div>
-
-                                <div class="flex space-x-2 pt-3 border-t">
-                                    <a href="{{ route('projects.show', $project) }}" class="btn-secondary text-xs py-1 px-3">
-                                        Ver
-                                    </a>
-                                    @can('update', $project)
-                                        <a href="{{ route('projects.edit', $project) }}" class="btn-secondary text-xs py-1 px-3">
-                                            Editar
-                                        </a>
-                                    @endcan
-                                </div>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6" id="team-members">
+        <div class="card">
+            <div class="card-body">
+                <h3 class="text-sm font-semibold text-gray-900 mb-3">Miembros</h3>
+                <div class="space-y-2 text-sm">
+                    @foreach($team->users as $member)
+                        <div class="flex items-center justify-between border border-gray-200 rounded px-3 py-2">
+                            <div>
+                                <p class="text-sm font-semibold text-gray-900">{{ $member->full_name }}</p>
+                                <p class="text-xs text-gray-500">{{ $member->email }}</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="badge badge-secondary">{{ $member->pivot->role }}</span>
+                                @can('manageMembers', $team)
+                                    <form method="POST" action="{{ route('teams.members.update', [$team, $member]) }}" class="flex items-center gap-2">
+                                        @csrf
+                                        @method('PATCH')
+                                        <select name="role" class="form-input text-xs">
+                                            <option value="owner" @selected($member->pivot->role === 'owner')>owner</option>
+                                            <option value="admin" @selected($member->pivot->role === 'admin')>admin</option>
+                                            <option value="member" @selected($member->pivot->role === 'member')>member</option>
+                                            <option value="observer" @selected($member->pivot->role === 'observer')>observer</option>
+                                        </select>
+                                        <button type="submit" class="btn-secondary text-xs">Actualizar</button>
+                                    </form>
+                                    <form method="POST" action="{{ route('teams.members.destroy', [$team, $member]) }}">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="text-xs text-red-600">Quitar</button>
+                                    </form>
+                                @endcan
                             </div>
                         </div>
                     @endforeach
                 </div>
+            </div>
+        </div>
 
-                <div class="mt-6">
-                    {{ $projects->links() }}
-                </div>
-            @else
-                <div class="text-center py-12">
-                    <p class="text-sm text-gray-600">Este equipo no tiene proyectos aún.</p>
-                    @can('create', [\App\Models\Project::class, $team])
-                        <div class="mt-4">
-                            <a href="{{ route('projects.create', ['team' => $team->id]) }}" class="btn-primary">
-                                Crear primer proyecto
-                            </a>
+        <div class="card">
+            <div class="card-body">
+                <h3 class="text-sm font-semibold text-gray-900 mb-3">Agregar miembro</h3>
+                @can('manageMembers', $team)
+                    <form method="POST" action="{{ route('teams.members.store', $team) }}" class="space-y-3" x-data="{
+                        query: '',
+                        selectedId: '',
+                        selectedLabel: '',
+                        users: @json($availableUsers->map(fn ($user) => [
+                            'id' => $user->id,
+                            'label' => $user->full_name . ' (' . $user->email . ')',
+                        ])->values()),
+                        get filteredUsers() {
+                            if (!this.query) {
+                                return this.users.slice(0, 8);
+                            }
+                            const q = this.query.toLowerCase();
+                            return this.users.filter(user => user.label.toLowerCase().includes(q)).slice(0, 8);
+                        },
+                        selectUser(user) {
+                            this.selectedId = user.id;
+                            this.selectedLabel = user.label;
+                            this.query = user.label;
+                        }
+                    }">
+                        @csrf
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Usuario</label>
+                            <input type="text" x-model="query" class="form-input w-full" placeholder="Busca por nombre o correo" autocomplete="off">
+                            <input type="hidden" name="user_id" x-model="selectedId" required>
+                            <div class="mt-2 space-y-1" x-show="filteredUsers.length">
+                                <template x-for="user in filteredUsers" :key="user.id">
+                                    <button type="button" class="w-full text-left text-xs px-3 py-2 rounded border border-gray-200 hover:bg-gray-50"
+                                            @click="selectUser(user)">
+                                        <span x-text="user.label"></span>
+                                    </button>
+                                </template>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-2" x-show="selectedLabel">
+                                Seleccionado: <span class="font-medium" x-text="selectedLabel"></span>
+                            </p>
                         </div>
-                    @endcan
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Rol</label>
+                            <select name="role" class="form-input w-full" required>
+                                <option value="admin">admin</option>
+                                <option value="member" selected>member</option>
+                                <option value="observer">observer</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn-primary" :disabled="!selectedId">Agregar</button>
+                    </form>
+                @else
+                    <p class="text-sm text-gray-500">No tienes permisos para gestionar miembros.</p>
+                @endcan
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-sm font-semibold text-gray-900">Proyectos</h3>
+                @can('create', [\App\Models\Project::class, $team])
+                    <a href="{{ route('projects.create', ['team' => $team->id]) }}" class="btn-secondary text-xs">Nuevo proyecto</a>
+                @endcan
+            </div>
+            @if($projects->count() === 0)
+                <p class="text-sm text-gray-500">Sin proyectos para este equipo.</p>
+            @else
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    @foreach($projects as $project)
+                        <div class="border border-gray-200 rounded p-3">
+                            <p class="text-sm font-semibold text-gray-900">{{ $project->name }}</p>
+                            <p class="text-xs text-gray-500">{{ $project->status_label ?? $project->status }}</p>
+                            <a href="{{ route('projects.show', $project) }}" class="text-xs text-primary-600">Ver</a>
+                        </div>
+                    @endforeach
+                </div>
+                <div class="mt-4">
+                    {{ $projects->links() }}
                 </div>
             @endif
         </div>

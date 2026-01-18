@@ -13,7 +13,7 @@ Este repositorio implementa los módulos M-01 a M-15, con enfoque en equipos, pr
 ## Requisitos locales
 
 - XAMPP (Apache + MySQL) o equivalente
-- PHP 8.1+ con extensiones: pdo_mysql, mbstring, openssl, fileinfo, tokenizer, xml
+- PHP 8.1+ con extensiones: pdo_mysql, mbstring, openssl, fileinfo, tokenizer, xml, gd
 - Composer
 - Node.js (v16+) y npm
 - Git
@@ -63,4 +63,22 @@ Este repositorio implementa los módulos M-01 a M-15, con enfoque en equipos, pr
 
 - El repositorio usa **superadmin** como rol global para pruebas de acceso.
 - La zona horaria por defecto es `America/Guayaquil`.
+- Estado actual: modulos M-01 a M-38.
 
+## Demo rapido
+
+1. Ejecuta seed demo:
+   ```bash
+   DEMO_SEED=true php artisan migrate:fresh --seed
+   ```
+2. Inicia la app:
+   ```bash
+   php artisan serve
+   npm run dev
+   ```
+3. Credenciales demo: ver `docs/DEMO_SEEDERS.md`.
+
+## QA rapido
+
+- Checklist y pasos: `docs/QA_MANUAL_TESTS.md`
+- Cierre final: `docs/FINAL_CHECKLIST.md`

@@ -1,10 +1,7 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
-@section('title', 'Nuevo ítem de backlog')
-
-@section('content')
-<x-slot name="header">
-    <div class="flex flex-wrap justify-between items-center gap-3">
+@section('header')
+<div class="flex flex-wrap justify-between items-center gap-3">
         <div>
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                 Nuevo ítem de backlog
@@ -13,7 +10,11 @@
         </div>
         <a href="{{ route('backlog.index', $project) }}" class="btn-secondary">Volver</a>
     </div>
-</x-slot>
+@endsection
+@section('title', 'Nuevo ítem de backlog')
+
+@section('content')
+
 
 <div class="card">
     <div class="card-body">
@@ -55,3 +56,4 @@
     </div>
 </div>
 @endsection
+

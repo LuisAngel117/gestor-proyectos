@@ -1,19 +1,25 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
-@section('title', 'Sprints - ' . $project->name)
-
-@section('content')
-<x-slot name="header">
-    <div class="flex flex-wrap justify-between items-center gap-3">
+@section('header')
+<div class="flex flex-wrap justify-between items-center gap-3">
         <div>
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                Sprints · {{ $project->name }}
+                Sprints — {{ $project->name }}
             </h2>
             <p class="text-sm text-gray-600 mt-1">Planifica el sprint backlog para este proyecto.</p>
         </div>
-        <a href="{{ route('projects.show', $project) }}" class="btn-secondary">Volver al proyecto</a>
+        <div class="flex gap-2">
+            @can('update', $project)
+                <a href="{{ route('sprints.create', $project) }}" class="btn-primary">Crear sprint</a>
+            @endcan
+            <a href="{{ route('projects.show', $project) }}" class="btn-secondary">Volver al proyecto</a>
+        </div>
     </div>
-</x-slot>
+@endsection
+@section('title', 'Sprints - ' . $project->name)
+
+@section('content')
+
 
 <div class="space-y-6">
     @if($sprints->isEmpty())
@@ -35,7 +41,7 @@
                                     </a>
                                 </h3>
                                 <p class="text-xs text-gray-500">
-                                    {{ $sprint->start_date->format('d/m/Y') }} → {{ $sprint->end_date->format('d/m/Y') }}
+                                    {{ $sprint->start_date->format('d/m/Y') }} — {{ $sprint->end_date->format('d/m/Y') }}
                                 </p>
                             </div>
                             <span class="badge badge-secondary">{{ ucfirst($sprint->status) }}</span>
@@ -65,3 +71,4 @@
     @endif
 </div>
 @endsection
+

@@ -18,6 +18,7 @@ class AuthServiceProvider extends ServiceProvider
         \App\Models\BacklogItem::class => \App\Policies\BacklogItemPolicy::class,
         \App\Models\Sprint::class => \App\Policies\SprintPolicy::class,
         \App\Models\Task::class => \App\Policies\TaskPolicy::class,
+        \App\Models\Comment::class => \App\Policies\CommentPolicy::class,
     ];
 
     /**

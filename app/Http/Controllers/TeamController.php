@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Team;
+use App\Models\User;
 use App\Support\Context\TeamContext;
 use App\Support\Visibility\ProjectVisibility;
 use App\Support\Visibility\TeamVisibility;
@@ -14,19 +15,45 @@ class TeamController extends Controller
     /**
      * Display a listing of the teams.
      */
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
+        $search = $request->string('q')->trim()->toString();
 
-        // Equipos donde el usuario es miembro
-        $teams = TeamVisibility::visibleTeamsFor($user)
-            ->with('owner')
-            ->get();
+        // Equipos donde el usuario es miembro (superadmin ve todos)
+        $teamsQuery = $user->isSuperadmin()
+            ? Team::query()
+            : TeamVisibility::visibleTeamsFor($user);
+
+        $teamsQuery->with('owner');
+
+        if ($search !== '') {
+            $teamsQuery->where(function ($query) use ($search) {
+                $query->where('name', 'like', '%' . $search . '%')
+                    ->orWhereHas('owner', function ($ownerQuery) use ($search) {
+                        $ownerQuery->where('name', 'like', '%' . $search . '%')
+                            ->orWhere('apellido', 'like', '%' . $search . '%')
+                            ->orWhere('email', 'like', '%' . $search . '%');
+                    });
+            });
+        }
+
+        $teams = $teamsQuery
+            ->orderBy('name')
+            ->paginate(12)
+            ->appends($request->query());
 
         // Equipos propiedad del usuario
-        $ownedTeams = $user->ownedTeams()->with('users')->get();
+        $ownedTeams = $user->isSuperadmin()
+            ? collect()
+            : $user->ownedTeams()->with('users')->get();
 
-        return view('teams.index', compact('teams', 'ownedTeams'));
+        return view('teams.index', [
+            'teams' => $teams,
+            'ownedTeams' => $ownedTeams,
+            'search' => $search,
+            'isSuperadmin' => $user->isSuperadmin(),
+        ]);
     }
 
     /**
@@ -74,12 +101,16 @@ class TeamController extends Controller
         TeamContext::set($team->id, $team->name);
 
         $team->load(['owner', 'users']);
+        $availableUsers = User::query()
+            ->whereNotIn('id', $team->users->pluck('id'))
+            ->orderBy('name')
+            ->get();
         $projects = ProjectVisibility::visibleProjectsForTeam($user, $team)
             ->with(['creator', 'members'])
             ->latest()
             ->paginate(12);
 
-        return view('teams.show', compact('team', 'projects'));
+        return view('teams.show', compact('team', 'projects', 'availableUsers'));
     }
 
     /**

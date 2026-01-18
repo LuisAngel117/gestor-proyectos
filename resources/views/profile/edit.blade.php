@@ -1,10 +1,7 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
-@section('title', 'Editar Perfil')
-
-@section('content')
-<x-slot name="header">
-    <div class="flex justify-between items-center">
+@section('header')
+<div class="flex justify-between items-center">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
             {{ __('Editar Perfil') }}
         </h2>
@@ -15,7 +12,11 @@
             Volver
         </a>
     </div>
-</x-slot>
+@endsection
+@section('title', 'Editar Perfil')
+
+@section('content')
+
 
 <div class="space-y-6">
     <form method="POST" action="{{ route('profile.update.extended') }}">
@@ -183,3 +184,4 @@
     </form>
 </div>
 @endsection
+

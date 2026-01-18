@@ -1,10 +1,7 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
-@section('title', 'Crear Equipo')
-
-@section('content')
-<x-slot name="header">
-    <div class="flex justify-between items-center">
+@section('header')
+<div class="flex justify-between items-center">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
             {{ __('Crear Nuevo Equipo') }}
         </h2>
@@ -15,7 +12,11 @@
             Volver
         </a>
     </div>
-</x-slot>
+@endsection
+@section('title', 'Crear Equipo')
+
+@section('content')
+
 
 <div class="max-w-2xl mx-auto">
     <div class="card">
@@ -95,3 +96,4 @@
     </div>
 </div>
 @endsection
+

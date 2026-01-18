@@ -42,6 +42,11 @@ class TaskPolicy
         return $this->canManageTask($user, $task->project, ['owner', 'admin']);
     }
 
+    public function trackTime(User $user, Task $task): bool
+    {
+        return $this->canManageTask($user, $task->project, ['owner', 'admin', 'member']);
+    }
+
     private function canManageTask(User $user, Project $project, array $allowedRoles): bool
     {
         $projectRole = $user->roleInProject($project->id);

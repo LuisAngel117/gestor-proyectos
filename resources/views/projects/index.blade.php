@@ -1,13 +1,17 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('title', 'Proyectos')
 
-@section('content')
-<x-slot name="header">
-    <div class="flex justify-between items-center">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Proyectos') }}
-        </h2>
+@section('header')
+    <div class="flex flex-wrap justify-between items-center gap-3">
+        <div>
+            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+                {{ __('Proyectos') }}
+            </h2>
+            <p class="text-sm text-gray-600 mt-1">
+                {{ $isSuperadmin ? 'Vista global de proyectos.' : 'Proyectos donde participas.' }}
+            </p>
+        </div>
         <a href="{{ route('projects.create') }}" class="btn-primary">
             <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
@@ -15,10 +19,28 @@
             Nuevo Proyecto
         </a>
     </div>
-</x-slot>
+@endsection
 
+@section('content')
 <div class="space-y-6">
-    <!-- Filtros por equipo -->
+    <div class="card">
+        <div class="card-body">
+            <form method="GET" action="{{ route('projects.index') }}" class="flex flex-wrap gap-3 items-end">
+                <div class="flex-1 min-w-[240px]">
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Buscar proyecto (nombre, team o creador)</label>
+                    <input type="text" name="q" value="{{ $search }}" class="form-input w-full" placeholder="Ej: Proyecto Alpha, Equipo Dev">
+                </div>
+                @if($teamId)
+                    <input type="hidden" name="team" value="{{ $teamId }}">
+                @endif
+                <button type="submit" class="btn-secondary">Buscar</button>
+                @if($search)
+                    <a href="{{ route('projects.index', $teamId ? ['team' => $teamId] : []) }}" class="btn-secondary">Limpiar</a>
+                @endif
+            </form>
+        </div>
+    </div>
+
     <div class="card">
         <div class="card-body">
             <h3 class="text-sm font-semibold text-gray-700 mb-3">Filtrar por equipo</h3>
@@ -37,13 +59,11 @@
         </div>
     </div>
 
-    <!-- Lista de proyectos -->
     @if($projects->count() > 0)
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         @foreach($projects as $project)
         <div class="card hover:shadow-lg transition">
             <div class="card-body">
-                <!-- Header del proyecto -->
                 <div class="flex items-start justify-between mb-3">
                     <div class="flex-1">
                         <h3 class="font-semibold text-lg text-gray-900 mb-1">
@@ -53,7 +73,7 @@
                         </h3>
                         <p class="text-xs text-gray-500">
                             <svg class="w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0z"></path>
                             </svg>
                             {{ $project->team->name }}
                         </p>
@@ -63,12 +83,10 @@
                     </span>
                 </div>
 
-                <!-- Descripción -->
                 <p class="text-sm text-gray-600 mb-4 line-clamp-2">
-                    {{ $project->description ?? 'Sin descripción' }}
+                    {{ $project->description ?? 'Sin descripcion' }}
                 </p>
 
-                <!-- Estado y métricas -->
                 <div class="flex items-center justify-between mb-4">
                     <span class="badge badge-{{ $project->status_color }}">
                         {{ $project->status_label }}
@@ -91,7 +109,6 @@
                     </div>
                 </div>
 
-                <!-- Fechas -->
                 @if($project->start_date || $project->due_date)
                 <div class="text-xs text-gray-500 mb-4">
                     @if($project->start_date)
@@ -116,7 +133,6 @@
                 </div>
                 @endif
 
-                <!-- Acciones -->
                 <div class="flex space-x-2 pt-3 border-t">
                     <a href="{{ route('projects.show', $project) }}" class="btn-secondary text-xs py-1 px-3">
                         Ver
@@ -132,12 +148,10 @@
         @endforeach
     </div>
 
-    <!-- Paginación -->
     <div class="mt-6">
         {{ $projects->links() }}
     </div>
     @else
-    <!-- Sin proyectos -->
     <div class="card">
         <div class="card-body text-center py-12">
             <svg class="mx-auto h-24 w-24 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -145,7 +159,7 @@
             </svg>
             <h3 class="mt-6 text-lg font-semibold text-gray-900">No hay proyectos disponibles</h3>
             <p class="mt-2 text-sm text-gray-600">
-                {{ $teamId ? 'Este equipo no tiene proyectos aún.' : 'No tienes proyectos en ninguno de tus equipos.' }}
+                {{ $teamId ? 'Este equipo no tiene proyectos aun.' : 'No tienes proyectos en ninguno de tus equipos.' }}
             </p>
             <div class="mt-6">
                 <a href="{{ route('projects.create') }}" class="btn-primary">

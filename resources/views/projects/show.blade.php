@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('title', $project->name)
 
@@ -9,7 +9,7 @@
             {{ $project->name }}
         </h2>
         <p class="text-sm text-gray-600 mt-1">
-            Equipo: {{ $project->team->name }} • Creado por: {{ $project->creator->full_name }}
+            Equipo: {{ $project->team->name }} - Creado por: {{ $project->creator->full_name }}
         </p>
     </div>
     <div class="flex flex-wrap gap-2">
@@ -27,6 +27,12 @@
             </svg>
             Sprints
         </a>
+        <a href="{{ route('projects.scrum-board.index', $project) }}" class="btn-secondary">
+            <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M3 12h18M3 17h18M7 3v18"></path>
+            </svg>
+            Tablero Scrum
+        </a>
         @can('viewAny', [\App\Models\BacklogItem::class, $project])
         <a href="{{ route('backlog.index', $project) }}" class="btn-secondary">
             <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -35,6 +41,12 @@
             Backlog
         </a>
         @endcan
+        <a href="{{ route('tasks.index', $project) }}" class="btn-secondary">
+            <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5h6M9 9h6M9 13h6M5 5h.01M5 9h.01M5 13h.01M5 17h.01M9 17h6"></path>
+            </svg>
+            Tareas
+        </a>
         <a href="{{ route('projects.index') }}" class="btn-secondary">
             <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
@@ -45,6 +57,104 @@
 </div>
 
 <div class="space-y-6">
+    <div class="card" id="project-assistant">
+        <div class="card-body">
+            <h3 class="text-sm font-semibold text-gray-900 mb-2">Asistente del proyecto</h3>
+            <p class="text-sm text-gray-600 mb-4">Completa este flujo para ver todo el proyecto reflejado.</p>
+            <ol class="space-y-2 text-sm">
+                <li class="flex items-center justify-between">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span>1. Agregar miembros al proyecto</span>
+                            @if($project->members->count() > 1)
+                                <span class="inline-flex items-center gap-1 text-xs font-medium text-emerald-600">
+                                    <svg class="w-4 h-4 animate-pulse" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M16.704 5.293a1 1 0 010 1.414l-7.5 7.5a1 1 0 01-1.414 0l-3.5-3.5a1 1 0 111.414-1.414L8.5 12.086l6.793-6.793a1 1 0 011.411 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Listo
+                                </span>
+                            @else
+                                <span class="text-xs text-gray-500">Pendiente</span>
+                            @endif
+                        </div>
+                        <p class="text-xs text-gray-500">Los miembros del equipo no se agregan automáticamente al proyecto.</p>
+                    </div>
+                    <a href="#project-members" class="btn-secondary text-xs">Ir</a>
+                </li>
+                <li class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span>2. Crear sprint</span>
+                        @if($project->sprints->count() > 0)
+                            <span class="inline-flex items-center gap-1 text-xs font-medium text-emerald-600">
+                                <svg class="w-4 h-4 animate-pulse" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M16.704 5.293a1 1 0 010 1.414l-7.5 7.5a1 1 0 01-1.414 0l-3.5-3.5a1 1 0 111.414-1.414L8.5 12.086l6.793-6.793a1 1 0 011.411 0z" clip-rule="evenodd"/>
+                                </svg>
+                                Listo
+                            </span>
+                        @else
+                            <span class="text-xs text-gray-500">Pendiente</span>
+                        @endif
+                    </div>
+                    <a href="{{ route('sprints.create', $project) }}" class="btn-secondary text-xs">Crear sprint</a>
+                </li>
+                <li class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span>3. Crear ítems en backlog</span>
+                        @if($project->backlog_items_count > 0)
+                            <span class="inline-flex items-center gap-1 text-xs font-medium text-emerald-600">
+                                <svg class="w-4 h-4 animate-pulse" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M16.704 5.293a1 1 0 010 1.414l-7.5 7.5a1 1 0 01-1.414 0l-3.5-3.5a1 1 0 111.414-1.414L8.5 12.086l6.793-6.793a1 1 0 011.411 0z" clip-rule="evenodd"/>
+                                </svg>
+                                Listo
+                            </span>
+                        @else
+                            <span class="text-xs text-gray-500">Pendiente</span>
+                        @endif
+                    </div>
+                    <a href="{{ route('backlog.create', $project) }}" class="btn-secondary text-xs">Nuevo ítem</a>
+                </li>
+                <li class="flex items-center justify-between">
+                    <span>4. Planificar sprint</span>
+                    <div class="flex items-center gap-2">
+                        @if($planningSprint)
+                            <a href="{{ route('sprints.plan', [$project, $planningSprint]) }}" class="btn-secondary text-xs">Planificar</a>
+                        @elseif($activeSprint)
+                            <span class="text-xs text-gray-500">El sprint activo ya está iniciado. Crea uno en planificación.</span>
+                        @else
+                            <span class="text-xs text-gray-500">Crea un sprint en planificación</span>
+                        @endif
+                    </div>
+                </li>
+                <li class="flex items-center justify-between">
+                    <span>5. Crear tareas</span>
+                    <div class="flex items-center gap-2">
+                        <span class="badge {{ $project->tasks_count > 0 ? 'badge-success' : 'badge-warning' }}">
+                            {{ $project->tasks_count > 0 ? 'Listo' : 'Pendiente' }}
+                        </span>
+                        <a href="{{ route('tasks.index', $project) }}" class="btn-secondary text-xs">Ir a tareas</a>
+                    </div>
+                </li>
+                <li class="flex items-center justify-between">
+                    <span>6. Ejecutar en tablero Scrum</span>
+                    <div class="flex items-center gap-2">
+                        @if($activeSprint)
+                            <a href="{{ route('projects.scrum-board.index', $project) }}" class="btn-secondary text-xs">Abrir tablero</a>
+                        @else
+                            <span class="text-xs text-gray-500">Activa un sprint primero</span>
+                        @endif
+                    </div>
+                </li>
+                <li class="flex items-center justify-between">
+                    <span>7. Revisar calendario y dashboard</span>
+                    <div class="flex items-center gap-2">
+                        <a href="{{ route('projects.calendar.index', $project) }}" class="btn-secondary text-xs">Calendario</a>
+                        <a href="{{ route('projects.dashboard.index', $project) }}" class="btn-secondary text-xs">Dashboard</a>
+                    </div>
+                </li>
+            </ol>
+        </div>
+    </div>
+
     <!-- Información del proyecto -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Detalles principales -->
@@ -118,7 +228,7 @@
             </div>
         </div>
 
-        <!-- Sidebar con métricas -->
+        <!-- Sidebar con mátricas -->
         <div class="space-y-6">
             <!-- Estadísticas rápidas -->
             <div class="card">
@@ -135,7 +245,7 @@
                         </div>
                         <div class="flex items-center justify-between">
                             <span class="text-sm text-gray-600">Tareas</span>
-                            <span class="text-lg font-semibold text-gray-900">0</span>
+                            <span class="text-lg font-semibold text-gray-900">{{ $project->tasks_count }}</span>
                         </div>
                     </div>
                 </div>
@@ -160,7 +270,7 @@
     </div>
 
     <!-- Miembros del proyecto -->
-    <div class="card">
+    <div class="card" id="project-members">
         <div class="card-body">
             <div class="flex flex-wrap justify-between items-center gap-3 mb-4">
                 <h3 class="text-lg font-semibold text-gray-900">Miembros del Proyecto</h3>
@@ -306,3 +416,4 @@
     @endcan
 </div>
 @endsection
+

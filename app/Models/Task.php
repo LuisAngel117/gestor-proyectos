@@ -26,7 +26,10 @@ class Task extends Model
         'title',
         'description',
         'status',
+        'status_changed_at',
+        'completed_at',
         'priority',
+        'due_date',
         'estimated_hours',
         'created_by',
     ];
@@ -37,6 +40,9 @@ class Task extends Model
      * @var array<string, string>
      */
     protected $casts = [
+        'status_changed_at' => 'datetime',
+        'completed_at' => 'datetime',
+        'due_date' => 'date',
         'estimated_hours' => 'decimal:2',
     ];
 
@@ -73,6 +79,33 @@ class Task extends Model
     public function checklistItems(): HasMany
     {
         return $this->hasMany(TaskChecklistItem::class)->orderBy('position');
+    }
+
+    public function timeEntries(): HasMany
+    {
+        return $this->hasMany(TaskTimeEntry::class);
+    }
+
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(Attachment::class);
+    }
+
+    public function statusEvents(): HasMany
+    {
+        return $this->hasMany(TaskStatusEvent::class);
+    }
+
+    public function assignees(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'task_user')
+            ->withPivot(['assigned_by', 'assigned_at'])
+            ->withTimestamps();
+    }
+
+    public function comments(): HasMany
+    {
+        return $this->hasMany(Comment::class)->orderBy('created_at');
     }
 
     public function prerequisites(): BelongsToMany

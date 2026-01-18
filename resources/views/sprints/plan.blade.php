@@ -1,19 +1,20 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
-@section('title', 'Planificar Sprint')
-
-@section('content')
-<x-slot name="header">
-    <div class="flex flex-wrap justify-between items-center gap-3">
+@section('header')
+<div class="flex flex-wrap justify-between items-center gap-3">
         <div>
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                Planificar · {{ $sprint->name }}
+                Planificar — {{ $sprint->name }}
             </h2>
             <p class="text-sm text-gray-600 mt-1">{{ $project->name }}</p>
         </div>
         <a href="{{ route('sprints.index', $project) }}" class="btn-secondary">Volver a sprints</a>
     </div>
-</x-slot>
+@endsection
+@section('title', 'Planificar Sprint')
+
+@section('content')
+
 
 @if(!$sprint->isPlanning())
     <div class="mb-6 rounded-md bg-yellow-50 border border-yellow-200 p-4 text-sm text-yellow-800">
@@ -120,3 +121,4 @@
     </div>
 </div>
 @endsection
+

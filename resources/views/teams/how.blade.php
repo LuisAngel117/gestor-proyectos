@@ -1,10 +1,7 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
-@section('title', $team->name)
-
-@section('content')
-<x-slot name="header">
-    <div class="flex justify-between items-center">
+@section('header')
+<div class="flex justify-between items-center">
         <div>
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                 {{ $team->name }}
@@ -30,7 +27,11 @@
             </a>
         </div>
     </div>
-</x-slot>
+@endsection
+@section('title', $team->name)
+
+@section('content')
+
 
 <div class="space-y-6">
     <!-- Información del equipo -->
@@ -170,3 +171,4 @@
     @endif
 </div>
 @endsection
+

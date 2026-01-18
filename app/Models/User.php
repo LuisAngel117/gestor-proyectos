@@ -89,6 +89,16 @@ class User extends Authenticatable
     }
 
     /**
+     * The tasks assigned to the user.
+     */
+    public function assignedTasks(): BelongsToMany
+    {
+        return $this->belongsToMany(Task::class, 'task_user')
+            ->withPivot(['assigned_by', 'assigned_at'])
+            ->withTimestamps();
+    }
+
+    /**
      * The projects owned by the user.
      */
     public function ownedProjects(): HasMany
