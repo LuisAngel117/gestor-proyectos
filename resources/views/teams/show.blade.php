@@ -22,6 +22,14 @@
     @php
         $hasTeamMembers = $team->users->count() > 1;
         $hasProjects = $projects->total() > 0;
+        $userOptions = $availableUsers->map(function ($user) {
+            return [
+                'id' => $user->id,
+                'label' => $user->full_name . ' (' . $user->email . ')',
+                'name' => $user->full_name,
+                'email' => $user->email,
+            ];
+        })->values();
     @endphp
     <div class="card">
         <div class="card-body">
@@ -42,7 +50,7 @@
                             <span class="text-xs text-gray-500">Pendiente</span>
                         @endif
                     </div>
-                    <a href="#team-members" class="btn-secondary text-xs">Ir</a>
+                    <a href="#team-add-member" class="btn-secondary text-xs">Ir</a>
                 </li>
                 <li class="flex items-center justify-between">
                     <div class="flex items-center gap-2">
@@ -72,111 +80,106 @@
         </div>
     </div>
 
-    <div class="card">
-        <div class="card-body">
-            <h3 class="text-sm font-semibold text-gray-900 mb-2">Descripcion</h3>
-            <p class="text-sm text-gray-600">{{ $team->description ?? 'Sin descripcion' }}</p>
+    <div class="card" id="team-add-member">
+        <div class="card-body" x-data="teamMemberPicker(window.teamMemberUsers)">
+            <h3 class="text-sm font-semibold text-gray-900 mb-3">Agregar miembro</h3>
+            @can('manageMembers', $team)
+                <form method="POST" action="{{ route('teams.members.store', $team) }}" class="space-y-3" x-ref="form">
+                    @csrf
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Usuario</label>
+                        <input type="text" x-model="query" class="form-input w-full" placeholder="Busca por nombre o correo" autocomplete="off">
+                        <input type="hidden" name="user_id" x-model="selectedId" required>
+                        <input type="hidden" name="role" value="member">
+                    </div>
+                </form>
+                <div class="mt-4">
+                    <p class="text-xs text-gray-500 mb-2">Usuarios disponibles ({{ $availableUsers->count() }})</p>
+                    <div class="overflow-x-auto border border-gray-200 rounded">
+                        <table class="min-w-full divide-y divide-gray-200 text-xs">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wide">Nombre</th>
+                                    <th class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wide">Email</th>
+                                    <th class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wide">Acci&oacute;n</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <template x-for="user in filteredUsers" :key="user.id">
+                                    <tr>
+                                        <td class="px-3 py-2" x-text="user.name"></td>
+                                        <td class="px-3 py-2" x-text="user.email"></td>
+                                        <td class="px-3 py-2">
+                                            <button type="button" class="text-primary-600 text-xs font-medium" @click="submitSelection(user)">Agregar</button>
+                                        </td>
+                                    </tr>
+                                </template>
+                                <tr x-show="filteredUsers.length === 0">
+                                    <td colspan="3" class="px-3 py-3 text-center text-xs text-gray-500">No hay usuarios disponibles.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            @else
+                <p class="text-sm text-gray-500">No tienes permisos para gestionar miembros.</p>
+            @endcan
         </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6" id="team-members">
-        <div class="card">
-            <div class="card-body">
-                <h3 class="text-sm font-semibold text-gray-900 mb-3">Miembros</h3>
-                <div class="space-y-2 text-sm">
-                    @foreach($team->users as $member)
-                        <div class="flex items-center justify-between border border-gray-200 rounded px-3 py-2">
-                            <div>
-                                <p class="text-sm font-semibold text-gray-900">{{ $member->full_name }}</p>
-                                <p class="text-xs text-gray-500">{{ $member->email }}</p>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <span class="badge badge-secondary">{{ $member->pivot->role }}</span>
-                                @can('manageMembers', $team)
-                                    <form method="POST" action="{{ route('teams.members.update', [$team, $member]) }}" class="flex items-center gap-2">
-                                        @csrf
-                                        @method('PATCH')
-                                        <select name="role" class="form-input text-xs">
-                                            <option value="owner" @selected($member->pivot->role === 'owner')>owner</option>
-                                            <option value="admin" @selected($member->pivot->role === 'admin')>admin</option>
-                                            <option value="member" @selected($member->pivot->role === 'member')>member</option>
-                                            <option value="observer" @selected($member->pivot->role === 'observer')>observer</option>
-                                        </select>
-                                        <button type="submit" class="btn-secondary text-xs">Actualizar</button>
-                                    </form>
-                                    <form method="POST" action="{{ route('teams.members.destroy', [$team, $member]) }}">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="text-xs text-red-600">Quitar</button>
-                                    </form>
-                                @endcan
-                            </div>
-                        </div>
-                    @endforeach
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        <div>
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h3 class="text-sm font-semibold text-gray-900 mb-3">Descripci&oacute;n</h3>
+                    <p class="text-sm text-gray-600">{{ $team->description ?? 'Sin descripci&oacute;n' }}</p>
                 </div>
             </div>
         </div>
-
-        <div class="card">
-            <div class="card-body">
-                <h3 class="text-sm font-semibold text-gray-900 mb-3">Agregar miembro</h3>
-                @can('manageMembers', $team)
-                    <form method="POST" action="{{ route('teams.members.store', $team) }}" class="space-y-3" x-data="{
-                        query: '',
-                        selectedId: '',
-                        selectedLabel: '',
-                        users: @json($availableUsers->map(fn ($user) => [
-                            'id' => $user->id,
-                            'label' => $user->full_name . ' (' . $user->email . ')',
-                        ])->values()),
-                        get filteredUsers() {
-                            if (!this.query) {
-                                return this.users.slice(0, 8);
-                            }
-                            const q = this.query.toLowerCase();
-                            return this.users.filter(user => user.label.toLowerCase().includes(q)).slice(0, 8);
-                        },
-                        selectUser(user) {
-                            this.selectedId = user.id;
-                            this.selectedLabel = user.label;
-                            this.query = user.label;
-                        }
-                    }">
-                        @csrf
-                        <div>
-                            <label class="block text-xs font-medium text-gray-600 mb-1">Usuario</label>
-                            <input type="text" x-model="query" class="form-input w-full" placeholder="Busca por nombre o correo" autocomplete="off">
-                            <input type="hidden" name="user_id" x-model="selectedId" required>
-                            <div class="mt-2 space-y-1" x-show="filteredUsers.length">
-                                <template x-for="user in filteredUsers" :key="user.id">
-                                    <button type="button" class="w-full text-left text-xs px-3 py-2 rounded border border-gray-200 hover:bg-gray-50"
-                                            @click="selectUser(user)">
-                                        <span x-text="user.label"></span>
-                                    </button>
-                                </template>
+        <div>
+    <div class="card mt-4" id="team-members">
+        <div class="card-body">
+            <h3 class="text-sm font-semibold text-gray-900 mb-3">Miembros</h3>
+            <div class="space-y-2 text-sm">
+                        @foreach($team->users as $member)
+                            <div class="flex items-center justify-between border border-gray-200 rounded px-3 py-2">
+                                <div>
+                                    <p class="text-sm font-semibold text-gray-900">{{ $member->full_name }}</p>
+                                    <p class="text-xs text-gray-500">{{ $member->email }}</p>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="badge badge-secondary">{{ ucfirst($member->pivot->role) }}</span>
+                                    @can('manageMembers', $team)
+                                        <form method="POST" action="{{ route('teams.members.update', [$team, $member]) }}" class="flex items-center gap-2">
+                                            @csrf
+                                            @method('PATCH')
+                                            <select name="role" class="form-input text-xs">
+                                                <option value="owner" @selected($member->pivot->role === 'owner')>owner</option>
+                                                <option value="admin" @selected($member->pivot->role === 'admin')>admin</option>
+                                                <option value="member" @selected($member->pivot->role === 'member')>member</option>
+                                                <option value="observer" @selected($member->pivot->role === 'observer')>observer</option>
+                                            </select>
+                                            <button type="submit" class="btn-secondary text-xs">Actualizar</button>
+                                        </form>
+                                        <form method="POST" action="{{ route('teams.members.destroy', [$team, $member]) }}">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="text-xs text-red-600">Quitar</button>
+                                        </form>
+                                    @endcan
+                                </div>
                             </div>
-                            <p class="text-xs text-gray-500 mt-2" x-show="selectedLabel">
-                                Seleccionado: <span class="font-medium" x-text="selectedLabel"></span>
-                            </p>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-600 mb-1">Rol</label>
-                            <select name="role" class="form-input w-full" required>
-                                <option value="admin">admin</option>
-                                <option value="member" selected>member</option>
-                                <option value="observer">observer</option>
-                            </select>
-                        </div>
-                        <button type="submit" class="btn-primary" :disabled="!selectedId">Agregar</button>
-                    </form>
-                @else
-                    <p class="text-sm text-gray-500">No tienes permisos para gestionar miembros.</p>
-                @endcan
+                        @endforeach
+                    </div>
+                </div>
             </div>
         </div>
     </div>
+    </div>
+    <div class="mt-8"></div>
 
-    <div class="card">
+    <div class="card" id="team-projects">
         <div class="card-body">
             <div class="flex items-center justify-between mb-3">
                 <h3 class="text-sm font-semibold text-gray-900">Proyectos</h3>
@@ -203,4 +206,30 @@
         </div>
     </div>
 </div>
+@once
+    <script>
+        window.teamMemberUsers = @json($userOptions);
+        window.teamMemberPicker = function(users) {
+        return {
+            query: '',
+            selectedId: '',
+            selectedLabel: '',
+            users: Array.isArray(users) ? users : [],
+            get filteredUsers() {
+                const list = this.query ? this.users.filter(user => user.label.toLowerCase().includes(this.query.toLowerCase())) : this.users;
+                return list;
+            },
+            selectUser(user) {
+                this.selectedId = user.id;
+                this.selectedLabel = user.label;
+                this.query = user.label;
+            },
+            submitSelection(user) {
+                this.selectUser(user);
+                this.$nextTick(() => this.$refs.form?.submit());
+            },
+        };
+    };
+    </script>
+@endonce
 @endsection

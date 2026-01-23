@@ -1,45 +1,41 @@
-<nav x-data="{ open: false }" class="bg-white border-b border-gray-100">
+<nav x-data="{ open: false }" class="app-topbar">
     <!-- Primary Navigation Menu -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-16">
-            <div class="flex">
-                <!-- Logo -->
-                <div class="shrink-0 flex items-center">
-                    <a href="{{ route('dashboard') }}" class="flex items-center">
-                        <svg class="w-8 h-8 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
-                        </svg>
-                        <span class="ml-2 text-xl font-semibold text-gray-800">{{ config('app.name', 'Gestor') }}</span>
-                    </a>
-                </div>
-
-                <!-- Navigation Links -->
-                <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
-                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                        {{ __('Dashboard') }}
-                    </x-nav-link>
-                    <x-nav-link :href="route('teams.index')" :active="request()->routeIs('teams.*')">
-                        {{ __('Equipos') }}
-                    </x-nav-link>
-                    <x-nav-link :href="route('projects.index')" :active="request()->routeIs('projects.*')">
-                        {{ __('Proyectos') }}
-                    </x-nav-link>
-                    <x-nav-link :href="route('notifications.index')" :active="request()->routeIs('notifications.*')">
-                        {{ __('Notificaciones') }}
-                    </x-nav-link>
-                    @if(Auth::user()->isSuperadmin())
-                        <x-nav-link :href="route('admin.index')" :active="request()->routeIs('admin.*')">
-                            {{ __('Admin') }}
-                        </x-nav-link>
-                    @endif
-                </div>
+    <div class="px-4 sm:px-6 lg:px-8 h-full">
+        <div class="flex items-center h-full">
+            <div class="flex items-center gap-3 lg:hidden">
+                <a href="{{ route('dashboard') }}" class="flex items-center">
+                    <svg class="w-8 h-8 text-app-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+                    </svg>
+                    <span class="ml-2 text-lg font-semibold text-gray-800">{{ config('app.name', 'Gestor') }}</span>
+                </a>
             </div>
 
             <!-- Settings Dropdown -->
-            <div class="hidden sm:flex sm:items-center sm:ml-6">
+            <div class="hidden sm:flex sm:items-center sm:ml-auto space-x-4">
+                <button type="button" class="app-topbar-link"
+                        @click="$dispatch('toggle-theme')" aria-label="Cambiar tema">
+                    <svg class="theme-icon-light h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v2m0 14v2m9-9h-2M5 12H3m15.364-6.364l-1.414 1.414M7.05 16.95l-1.414 1.414m0-11.314L7.05 7.05m10.9 10.9l1.414 1.414M12 8a4 4 0 100 8 4 4 0 000-8z" />
+                    </svg>
+                    <svg class="theme-icon-dark h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z" />
+                    </svg>
+                </button>
+                <a href="{{ route('notifications.index') }}" class="app-topbar-link">
+                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.4-1.4A2 2 0 0118 14.17V11a6 6 0 10-12 0v3.17a2 2 0 01-.6 1.43L4 17h5m6 0a3 3 0 11-6 0h6z" />
+                    </svg>
+                    @php($unreadCount = Auth::user()->unreadNotifications()->count())
+                    @if($unreadCount > 0)
+                        <span class="absolute -top-1 -right-1 inline-flex items-center justify-center h-4 min-w-[1rem] px-1 text-[10px] font-semibold text-white bg-red-600 rounded-full">
+                            {{ $unreadCount }}
+                        </span>
+                    @endif
+                </a>
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
-                        <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition duration-150">
+                        <button class="app-topbar-user text-sm font-medium focus:outline-none">
                             <div>{{ Auth::user()->name }}</div>
 
                             <div class="ml-1">
@@ -73,7 +69,7 @@
             </div>
 
             <!-- Hamburger -->
-            <div class="-mr-2 flex items-center sm:hidden">
+            <div class="-mr-2 flex items-center sm:hidden ml-auto">
                 <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:text-gray-500 transition duration-150 ease-in-out">
                     <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
                         <path :class="{'hidden': open, 'inline-flex': ! open }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />

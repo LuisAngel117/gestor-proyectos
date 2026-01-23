@@ -142,7 +142,8 @@ class ProjectController extends Controller
         // Agregar al creador como owner del proyecto
         $project->addMember($user, 'owner');
 
-        return redirect()->route('projects.show', $project)
+        return redirect()
+            ->to(route('projects.show', $project) . '#project-assistant')
             ->with('success', 'Proyecto creado exitosamente');
     }
 

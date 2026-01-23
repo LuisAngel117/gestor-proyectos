@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 namespace App\Http\Controllers;
 
@@ -14,7 +14,13 @@ class SprintStateController extends Controller
 
         if (!$sprint->isPlanning()) {
             return back()->withErrors([
-                'status' => 'El sprint debe estar en planificación para iniciar.',
+                'status' => 'El sprint debe estar en planificacion para iniciar.',
+            ]);
+        }
+
+        if (!$sprint->backlogItems()->exists()) {
+            return back()->withErrors([
+                'status' => 'No puedes iniciar un sprint sin items asignados.',
             ]);
         }
 

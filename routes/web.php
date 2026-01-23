@@ -137,6 +137,8 @@ Route::middleware('auth')->group(function () {
                 ->name('sprints.store');
             Route::get('projects/{project}/sprints/{sprint}', [SprintController::class, 'show'])
                 ->name('sprints.show');
+            Route::delete('projects/{project}/sprints/{sprint}', [SprintController::class, 'destroy'])
+                ->name('sprints.destroy');
             Route::get('projects/{project}/sprints/{sprint}/plan', [SprintPlanningController::class, 'show'])
                 ->name('sprints.plan');
             Route::post('projects/{project}/sprints/{sprint}/plan/assign', [SprintPlanningController::class, 'assign'])

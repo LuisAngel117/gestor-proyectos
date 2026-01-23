@@ -1,5 +1,5 @@
-<footer class="bg-white border-t border-gray-200 mt-auto">
-    <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+<footer class="app-footer">
+    <div class="py-6 px-4 sm:px-6 lg:px-8">
         <div class="md:flex md:items-center md:justify-between">
             <div class="flex justify-center md:order-2 space-x-6">
                 <a href="#" class="text-gray-400 hover:text-gray-500">

@@ -13,51 +13,48 @@
 
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <script>
+        document.documentElement.dataset.theme = localStorage.getItem('theme') || 'light';
+    </script>
 </head>
-<body class="font-sans antialiased">
-    <div class="min-h-screen bg-gray-100">
-        <!-- Navegación -->
-        @include('components.nav')
+<body class="font-sans antialiased" x-data="{ theme: localStorage.getItem('theme') || 'light' }"
+      x-init="document.documentElement.dataset.theme = theme; $watch('theme', value => { document.documentElement.dataset.theme = value; localStorage.setItem('theme', value); })"
+      x-on:toggle-theme.window="theme = theme === 'light' ? 'dark' : 'light'">
+    <div class="app-shell">
+        <aside class="hidden lg:block app-sidebar">
+            @hasSection('sidebar')
+                @yield('sidebar')
+            @else
+                @include('components.sidebar')
+            @endif
+        </aside>
 
-        <!-- Page Heading -->
-        @hasSection('header')
-            <header class="bg-white shadow">
-                <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-                    @yield('header')
-                </div>
-            </header>
-        @elseif (isset($header))
-            <header class="bg-white shadow">
-                <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-                    {{ $header }}
-                </div>
-            </header>
-        @endif
+        <div class="app-content flex flex-col min-w-0">
+            <!-- Navegacion -->
+            @include('components.nav')
 
-        <!-- Page Content -->
-        <main class="py-12">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            <!-- Page Content -->
+            <main class="app-main flex-1">
+                <!-- Page Heading -->
+                @hasSection('header')
+                    <div class="app-page-header">
+                        @yield('header')
+                    </div>
+                @elseif (isset($header))
+                    <div class="app-page-header">
+                        {{ $header }}
+                    </div>
+                @endif
+
                 <!-- Alertas Flash -->
                 @include('components.alert')
 
-                @hasSection('sidebar')
-                    <div class="grid grid-cols-1 lg:grid-cols-[260px,1fr] gap-6">
-                        <aside>
-                            @yield('sidebar')
-                        </aside>
-                        <div>
-                            @yield('content')
-                        </div>
-                    </div>
-                @else
-                    <!-- Contenido de la pagina -->
-                    @yield('content')
-                @endif
-            </div>
-        </main>
+                @yield('content')
+            </main>
 
-        <!-- Footer -->
-        @include('components.footer')
+            <!-- Footer -->
+            @include('components.footer')
+        </div>
     </div>
 </body>
 </html>

@@ -86,7 +86,8 @@ class TeamController extends Controller
         // Agregar al creador como owner del equipo
         $team->addMember($user, 'owner');
 
-        return redirect()->route('teams.show', $team)
+        return redirect()
+            ->to(route('teams.show', $team) . '#team-add-member')
             ->with('success', 'Equipo creado exitosamente');
     }
 
@@ -101,8 +102,9 @@ class TeamController extends Controller
         TeamContext::set($team->id, $team->name);
 
         $team->load(['owner', 'users']);
+        $memberIds = $team->users->pluck('id')->toArray();
         $availableUsers = User::query()
-            ->whereNotIn('id', $team->users->pluck('id'))
+            ->when(count($memberIds) > 0, fn ($query) => $query->whereNotIn('id', $memberIds))
             ->orderBy('name')
             ->get();
         $projects = ProjectVisibility::visibleProjectsForTeam($user, $team)

@@ -42,7 +42,18 @@
             <h3 class="text-lg font-semibold text-gray-900 mb-4">Equipos que administro</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 @foreach($ownedTeams as $team)
-                <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
+                <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 hover:shadow-md transition relative">
+                    @can('delete', $team)
+                        <form method="POST" action="{{ route('teams.destroy', $team) }}" class="absolute top-3 right-3" onsubmit="return confirm('¿Eliminar este equipo? Esta acción no se puede deshacer.');">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="text-red-500 hover:text-red-700" aria-label="Eliminar equipo">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                </svg>
+                            </button>
+                        </form>
+                    @endcan
                     <div class="flex items-start justify-between">
                         <div class="flex-1">
                             <h4 class="font-semibold text-gray-900">{{ $team->name }}</h4>
@@ -60,7 +71,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="mt-4 flex space-x-2">
+                    <div class="mt-4 flex flex-wrap gap-2">
                         <a href="{{ route('teams.show', $team) }}" class="btn-secondary text-xs py-1 px-3">
                             Seleccionar
                         </a>
@@ -83,7 +94,18 @@
             </h3>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 @foreach($teams as $team)
-                <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
+                <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 hover:shadow-md transition relative">
+                    @can('delete', $team)
+                        <form method="POST" action="{{ route('teams.destroy', $team) }}" class="absolute top-3 right-3" onsubmit="return confirm('¿Eliminar este equipo? Esta acción no se puede deshacer.');">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="text-red-500 hover:text-red-700" aria-label="Eliminar equipo">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                </svg>
+                            </button>
+                        </form>
+                    @endcan
                     <div class="flex items-start justify-between">
                         <div class="flex-1">
                             <h4 class="font-semibold text-gray-900">{{ $team->name }}</h4>
@@ -111,7 +133,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="mt-4">
+                    <div class="mt-4 flex flex-wrap gap-2">
                         <a href="{{ route('teams.show', $team) }}" class="btn-secondary text-xs py-1 px-3">
                             Seleccionar Equipo
                         </a>

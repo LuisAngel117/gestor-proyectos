@@ -51,6 +51,14 @@ class SprintPolicy
         return $this->canManageSprint($user, $sprint);
     }
 
+    /**
+     * Determine whether the user can delete a sprint.
+     */
+    public function delete(User $user, Sprint $sprint): bool
+    {
+        return $this->canManageSprint($user, $sprint);
+    }
+
     private function canManageSprint(User $user, Sprint $sprint): bool
     {
         $project = $sprint->project;

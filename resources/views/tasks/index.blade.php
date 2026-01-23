@@ -59,35 +59,61 @@
     <div class="card">
         <div class="card-body">
             <h3 class="text-sm font-semibold text-gray-900 mb-3">Crear tarea</h3>
-            <form method="POST" action="{{ route('tasks.store', $project) }}" class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <form method="POST" action="{{ route('tasks.store', $project) }}" class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 @csrf
                 <input type="hidden" name="project_id" value="{{ $project->id }}">
-                <input type="text" name="title" class="form-input" placeholder="Titulo" required>
-                <select name="status" class="form-input">
-                    @foreach($statuses as $key => $status)
-                        <option value="{{ $key }}">{{ $status['label'] }}</option>
-                    @endforeach
-                </select>
-                <select name="priority" class="form-input">
-                    @foreach($priorities as $priority)
-                        <option value="{{ $priority }}">{{ $priority }}</option>
-                    @endforeach
-                </select>
-                <select name="sprint_id" class="form-input">
-                    <option value="">Backlog</option>
-                    @foreach($sprints as $sprint)
-                        <option value="{{ $sprint->id }}">{{ $sprint->name }}</option>
-                    @endforeach
-                </select>
-                <select name="parent_id" class="form-input">
-                    <option value="">Sin padre</option>
-                    @foreach($parentOptions as $parent)
-                        <option value="{{ $parent->id }}">{{ $parent->title }}</option>
-                    @endforeach
-                </select>
-                <input type="date" name="due_date" class="form-input">
-                <input type="number" name="estimated_hours" step="0.01" min="0" class="form-input" placeholder="Horas estimadas">
-                <textarea name="description" class="form-input md:col-span-3" rows="2" placeholder="Descripcion"></textarea>
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">T&iacute;tulo</label>
+                    <input type="text" name="title" class="form-input" placeholder="Ej: Cortar papas" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Estado</label>
+                    <select name="status" class="form-input">
+                        @foreach($statuses as $key => $status)
+                            <option value="{{ $key }}">{{ $status['label'] }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Prioridad</label>
+                    <select name="priority" class="form-input">
+                        @foreach($priorities as $priority)
+                            <option value="{{ $priority }}">{{ $priority }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Sprint</label>
+                    <select name="sprint_id" class="form-input">
+                        <option value="">Backlog</option>
+                        @foreach($sprints as $sprint)
+                            <option value="{{ $sprint->id }}">{{ $sprint->name }}</option>
+                        @endforeach
+                    </select>
+                    <p class="text-xs text-gray-500 mt-1">Deja en Backlog si no va al sprint activo.</p>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Subtarea</label>
+                    <select name="parent_id" class="form-input">
+                        <option value="">Sin padre</option>
+                        @foreach($parentOptions as $parent)
+                            <option value="{{ $parent->id }}">{{ $parent->title }}</option>
+                        @endforeach
+                    </select>
+                    <p class="text-xs text-gray-500 mt-1">Opcional.</p>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Fecha objetivo</label>
+                    <input type="date" name="due_date" class="form-input">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Horas estimadas</label>
+                    <input type="number" name="estimated_hours" step="0.01" min="0" class="form-input" placeholder="Ej: 1.5">
+                </div>
+                <div class="md:col-span-3">
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Descripci&oacute;n</label>
+                    <textarea name="description" class="form-input" rows="2" placeholder="Describe la tarea"></textarea>
+                </div>
                 <div class="md:col-span-3">
                     <button type="submit" class="btn-primary">Crear tarea</button>
                 </div>

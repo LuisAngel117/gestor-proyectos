@@ -45,7 +45,7 @@ class SprintController extends Controller
 
         $data = $request->validated();
 
-        $sequence = (int) $project->sprints()->max('sequence');
+        $sequence = (int) $project->sprints()->withTrashed()->max('sequence');
         $sequence = $sequence > 0 ? $sequence + 1 : 1;
 
         $sprint = $project->sprints()->create([
@@ -59,7 +59,7 @@ class SprintController extends Controller
         ]);
 
         return redirect()
-            ->route('sprints.show', [$project, $sprint])
+            ->to(route('projects.show', $project) . '#project-assistant')
             ->with('success', 'Sprint creado.');
     }
 
@@ -73,5 +73,20 @@ class SprintController extends Controller
             'project' => $project,
             'sprint' => $sprint,
         ]);
+    }
+
+    public function destroy(Project $project, Sprint $sprint): RedirectResponse
+    {
+        $this->authorize('delete', $sprint);
+
+        if ($sprint->project_id !== $project->id) {
+            abort(404);
+        }
+
+        $sprint->delete();
+
+        return redirect()
+            ->route('sprints.index', $project)
+            ->with('success', 'Sprint eliminado.');
     }
 }

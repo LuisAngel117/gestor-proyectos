@@ -32,7 +32,7 @@ class TeamMemberController extends Controller
         $team->addMember($user, $data['role']);
 
         return redirect()
-            ->route('teams.show', $team)
+            ->to(route('teams.show', $team) . '#team-projects')
             ->with('success', 'Miembro agregado al equipo.');
     }
 

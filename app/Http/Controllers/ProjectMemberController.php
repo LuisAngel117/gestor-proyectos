@@ -33,7 +33,7 @@ class ProjectMemberController extends Controller
         $project->addMember($user, $role);
 
         return redirect()
-            ->route('projects.show', $project)
+            ->to(route('projects.show', $project) . '#project-assistant')
             ->with('success', 'Miembro agregado al proyecto.');
     }
 
