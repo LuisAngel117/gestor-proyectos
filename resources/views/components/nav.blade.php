@@ -13,6 +13,27 @@
 
             <!-- Settings Dropdown -->
             <div class="hidden sm:flex sm:items-center sm:ml-auto space-x-4">
+                @php
+                    $navUser = Auth::user();
+                    $unreadCount = $navUser?->unreadNotifications()->count() ?? 0;
+                    $messageCount = 0;
+                    if ($navUser) {
+                        $teamIds = $navUser->teams()->pluck('teams.id')->all();
+                        $projectIds = $navUser->projects()->pluck('projects.id')->all();
+
+                        $messageCount = \App\Models\Message::query()
+                            ->where(function ($query) use ($teamIds, $projectIds) {
+                                $query->whereIn('team_id', $teamIds)
+                                    ->orWhereIn('project_id', $projectIds);
+                            })
+                            ->where(function ($query) use ($navUser) {
+                                $query->whereNull('recipient_id')
+                                    ->orWhere('recipient_id', $navUser->id)
+                                    ->orWhere('sender_id', $navUser->id);
+                            })
+                            ->count();
+                    }
+                @endphp
                 <button type="button" class="app-topbar-link"
                         @click="$dispatch('toggle-theme')" aria-label="Cambiar tema">
                     <svg class="theme-icon-light h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -26,10 +47,19 @@
                     <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.4-1.4A2 2 0 0118 14.17V11a6 6 0 10-12 0v3.17a2 2 0 01-.6 1.43L4 17h5m6 0a3 3 0 11-6 0h6z" />
                     </svg>
-                    @php($unreadCount = Auth::user()->unreadNotifications()->count())
                     @if($unreadCount > 0)
                         <span class="absolute -top-1 -right-1 inline-flex items-center justify-center h-4 min-w-[1rem] px-1 text-[10px] font-semibold text-white bg-red-600 rounded-full">
                             {{ $unreadCount }}
+                        </span>
+                    @endif
+                </a>
+                <a href="{{ route('messages.index') }}" class="app-topbar-link">
+                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h6m-9 8l3.5-3H20a2 2 0 002-2V7a2 2 0 00-2-2H4a2 2 0 00-2 2v9a2 2 0 002 2h1v3z" />
+                    </svg>
+                    @if($messageCount > 0)
+                        <span class="absolute -top-1 -right-1 inline-flex items-center justify-center h-4 min-w-[1rem] px-1 text-[10px] font-semibold text-white bg-blue-600 rounded-full">
+                            {{ $messageCount }}
                         </span>
                     @endif
                 </a>
@@ -94,6 +124,9 @@
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('notifications.index')" :active="request()->routeIs('notifications.*')">
                 {{ __('Notificaciones') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('messages.index')" :active="request()->routeIs('messages.*')">
+                {{ __('Mensajes') }}
             </x-responsive-nav-link>
             @if(Auth::user()->isSuperadmin())
                 <x-responsive-nav-link :href="route('admin.index')" :active="request()->routeIs('admin.*')">

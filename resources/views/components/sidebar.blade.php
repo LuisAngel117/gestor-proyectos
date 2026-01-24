@@ -37,6 +37,12 @@
                     </svg>
                     Notificaciones
                 </a>
+                <a href="{{ route('messages.index') }}" class="app-sidebar-link {{ request()->routeIs('messages.*') ? 'active' : '' }}">
+                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h6m-9 8l3.5-3H20a2 2 0 002-2V7a2 2 0 00-2-2H4a2 2 0 00-2 2v9a2 2 0 002 2h1v3z" />
+                    </svg>
+                    Mensajes
+                </a>
                 <a href="{{ route('profile.show') }}" class="app-sidebar-link {{ request()->routeIs('profile.*') ? 'active' : '' }}">
                     <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.12 17.74A7 7 0 0112 3a7 7 0 016.88 14.74M12 12a4 4 0 100-8 4 4 0 000 8z" />

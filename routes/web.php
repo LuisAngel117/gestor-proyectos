@@ -4,6 +4,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\MessageController;
 use App\Http\Controllers\BacklogItemController;
 use App\Http\Controllers\ProjectCalendarController;
 use App\Http\Controllers\ProjectDashboardController;
@@ -63,6 +64,12 @@ Route::middleware('auth')->group(function () {
         ->name('notifications.read');
     Route::patch('/notifications/read-all', [NotificationController::class, 'markAllRead'])
         ->name('notifications.read-all');
+    Route::get('/messages', [MessageController::class, 'inbox'])
+        ->name('messages.index');
+    Route::get('/messages/data', [MessageController::class, 'index'])
+        ->name('messages.data');
+    Route::post('/messages', [MessageController::class, 'store'])
+        ->name('messages.store');
     // Rutas de perfil de Breeze (gestión de cuenta)
     Route::get('/profile/account', [ProfileController::class, 'edit'])
         ->middleware('password.confirm')
