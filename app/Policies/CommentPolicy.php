@@ -16,9 +16,22 @@ class CommentPolicy
         }
 
         $project = $task->project;
+        $projectRole = $user->roleInProject($project->id);
 
-        return $user->roleInProject($project->id) !== null
-            || in_array($user->roleInTeam($project->team_id), ['owner', 'admin'], true);
+        if (in_array($projectRole, ['owner', 'admin'], true)) {
+            return true;
+        }
+
+        if ($projectRole === 'member') {
+            return $task->assignees()->where('users.id', $user->id)->exists();
+        }
+
+        if ($projectRole === 'observer') {
+            return $task->assignees()->where('users.id', $user->id)->exists()
+                || in_array($user->roleInTeam($project->team_id), ['owner', 'admin', 'observer'], true);
+        }
+
+        return in_array($user->roleInTeam($project->team_id), ['owner', 'admin', 'observer'], true);
     }
 
     public function create(User $user, Task $task): bool
@@ -26,8 +39,16 @@ class CommentPolicy
         $project = $task->project;
         $projectRole = $user->roleInProject($project->id);
 
-        if (in_array($projectRole, ['owner', 'admin', 'member'], true)) {
+        if (in_array($projectRole, ['owner', 'admin'], true)) {
             return true;
+        }
+
+        if ($projectRole === 'member') {
+            return $task->assignees()->where('users.id', $user->id)->exists();
+        }
+
+        if ($projectRole === 'observer') {
+            return false;
         }
 
         return in_array($user->roleInTeam($project->team_id), ['owner', 'admin'], true);
@@ -61,6 +82,11 @@ class CommentPolicy
             return true;
         }
 
-        return $projectRole === 'member' && (int) $comment->created_by === (int) $user->id;
+        if ($projectRole !== 'member') {
+            return false;
+        }
+
+        $isAssigned = $task->assignees()->where('users.id', $user->id)->exists();
+        return $isAssigned && (int) $comment->created_by === (int) $user->id;
     }
 }

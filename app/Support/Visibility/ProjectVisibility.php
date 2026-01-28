@@ -17,7 +17,7 @@ class ProjectVisibility
         }
 
         $adminTeamIds = $user->teams()
-            ->wherePivotIn('role', ['owner', 'admin'])
+            ->wherePivotIn('role', ['owner', 'admin', 'observer'])
             ->pluck('teams.id');
 
         $memberProjectIds = $user->projects()
@@ -46,7 +46,7 @@ class ProjectVisibility
 
         $role = $user->roleInTeam($team->id);
 
-        if (in_array($role, ['owner', 'admin'], true)) {
+        if (in_array($role, ['owner', 'admin', 'observer'], true)) {
             return $team->projects();
         }
 

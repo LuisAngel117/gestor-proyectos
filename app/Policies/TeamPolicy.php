@@ -38,8 +38,8 @@ class TeamPolicy
      */
     public function create(User $user): bool
     {
-        // Todos los usuarios autenticados pueden crear equipos
-        return true;
+        // Solo admins del sistema pueden crear equipos
+        return in_array($user->role, ['admin', 'superadmin'], true);
     }
 
     /**

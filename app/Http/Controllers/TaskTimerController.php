@@ -9,6 +9,7 @@ use App\Models\Task;
 use App\Models\TaskTimeEntry;
 use App\Models\User;
 use App\Notifications\TaskTimeLoggedNotification;
+use App\Services\Tracking\TaskStatusTrackingService;
 use App\Services\TimeTracking\TaskTimerService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -17,7 +18,10 @@ use RuntimeException;
 
 class TaskTimerController extends Controller
 {
-    public function __construct(private TaskTimerService $timerService)
+    public function __construct(
+        private TaskTimerService $timerService,
+        private TaskStatusTrackingService $trackingService
+    )
     {
     }
 
@@ -57,6 +61,10 @@ class TaskTimerController extends Controller
             ]);
         }
 
+        if ($task->status !== 'hecho' && $task->status !== 'en_progreso') {
+            $this->trackingService->recordTransition($task, 'en_progreso', $request->user());
+        }
+
         if ($request->expectsJson()) {
             return response()->json([
                 'message' => 'Temporizador iniciado.',
@@ -84,6 +92,10 @@ class TaskTimerController extends Controller
             return back()->withErrors([
                 'timer' => $exception->getMessage(),
             ]);
+        }
+
+        if ($task->status !== 'hecho') {
+            $this->trackingService->recordTransition($task, 'hecho', $request->user());
         }
 
         $this->notifyTaskCreator($task, $entry, $request->user()->id);

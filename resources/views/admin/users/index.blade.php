@@ -111,7 +111,7 @@
                                 <input type="checkbox" class="form-input h-4 w-4" x-model="selectAll" @change="toggleAll">
                             </th>
                             <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Usuario</th>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Rol del sistema</th>
                             <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Estado</th>
                             <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Equipos</th>
                             <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Proyectos</th>

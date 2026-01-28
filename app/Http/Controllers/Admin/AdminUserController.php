@@ -97,6 +97,8 @@ class AdminUserController extends Controller
             'role' => $data['role'],
             'estado' => $data['estado'],
             'email_verified_at' => now(),
+            'must_change_password' => true,
+            'profile_completed_at' => null,
         ]);
 
         return redirect()

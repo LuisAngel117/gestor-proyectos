@@ -39,7 +39,7 @@ class ScrumBoardController extends Controller
         Task $task
     ): RedirectResponse {
         $this->ensureProjectTaskConsistency($project, $task);
-        $this->authorize('update', $task);
+        $this->authorize('updateStatus', $task);
 
         $activeSprint = $this->boardService->getActiveSprint($project);
         if (!$activeSprint || (int) $task->sprint_id !== (int) $activeSprint->id) {

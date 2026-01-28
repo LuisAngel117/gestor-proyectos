@@ -81,6 +81,14 @@ class Task extends Model
         return $this->hasMany(TaskChecklistItem::class)->orderBy('position');
     }
 
+    /**
+     * Alias for implicit route binding (Task -> items).
+     */
+    public function items(): HasMany
+    {
+        return $this->checklistItems();
+    }
+
     public function timeEntries(): HasMany
     {
         return $this->hasMany(TaskTimeEntry::class);

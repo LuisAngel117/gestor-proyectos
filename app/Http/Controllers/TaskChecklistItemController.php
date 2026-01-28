@@ -8,6 +8,7 @@ use App\Http\Requests\TaskChecklist\UpdateChecklistItemRequest;
 use App\Models\Project;
 use App\Models\Task;
 use App\Models\TaskChecklistItem;
+use App\Models\TaskTimeEntry;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -54,7 +55,30 @@ class TaskChecklistItemController extends Controller
     ): RedirectResponse|\Illuminate\Http\JsonResponse {
         $this->ensureProjectTaskConsistency($project, $task);
         $this->ensureTaskChecklistConsistency($task, $item);
-        $this->authorize('update', $task);
+        $onlyToggle = $request->has('is_completed') && !$request->filled('content');
+        if ($onlyToggle) {
+            $this->authorize('toggleChecklist', $task);
+        } else {
+            $this->authorize('update', $task);
+        }
+
+        $requiresTimer = $request->has('is_completed')
+            && $request->boolean('is_completed')
+            && !$request->user()->can('update', $task);
+        if ($requiresTimer) {
+            $userId = (int) $request->user()->id;
+            if (!$this->hasActiveTimerForUser($task, $userId)) {
+                if ($request->expectsJson()) {
+                    return response()->json([
+                        'message' => 'Debes iniciar el timer antes de completar el checklist.',
+                    ], 422);
+                }
+
+                return back()->withErrors([
+                    'timer' => 'Debes iniciar el timer antes de completar el checklist.',
+                ]);
+            }
+        }
 
         $payload = [];
 
@@ -172,5 +196,14 @@ class TaskChecklistItemController extends Controller
                 $item->update(['position' => $index + 1]);
             }
         });
+    }
+
+    private function hasActiveTimerForUser(Task $task, int $userId): bool
+    {
+        return TaskTimeEntry::query()
+            ->where('task_id', $task->id)
+            ->where('user_id', $userId)
+            ->whereNull('stopped_at')
+            ->exists();
     }
 }

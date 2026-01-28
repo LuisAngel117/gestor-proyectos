@@ -29,22 +29,79 @@
 <div class="space-y-6">
     <div class="card">
         <div class="card-body">
+            <h3 class="text-sm font-semibold text-gray-900 mb-2">Ayuda r&aacute;pida</h3>
+            <p class="text-sm text-gray-600">
+                Aqu&iacute; solo ves notificaciones de trabajo. Los mensajes sociales est&aacute;n en
+                <a href="{{ route('messages.index') }}" class="text-primary-600">Mensajes</a>.
+            </p>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body">
             <h3 class="text-sm font-semibold text-gray-900 mb-3">Trabajo</h3>
             <div class="space-y-3">
                 @forelse ($workNotifications as $notification)
+                    @php
+                        $meta = $notification->meta ?? [];
+                        $event = $meta['event'] ?? ($notification->data['event'] ?? null);
+                        $task = $meta['task'] ?? null;
+                        $actor = $meta['actor'] ?? null;
+                        $assignedAt = $meta['assigned_at'] ?? null;
+                        $occurredAt = $meta['occurred_at'] ?? null;
+                        $projectId = $meta['project_id'] ?? ($notification->data['project_id'] ?? null);
+                        $taskLink = ($projectId && $task) ? route('tasks.show', [$projectId, $task]) : null;
+                    @endphp
                     <div class="border border-gray-200 rounded-lg p-3">
                         <div class="flex flex-wrap items-center justify-between gap-3">
                             <div>
-                                <p class="text-sm font-semibold text-gray-900">
-                                    {{ $notification->data['event'] ?? 'evento' }}
-                                </p>
-                                <p class="text-xs text-gray-500">
-                                    {{ $notification->created_at?->format('Y-m-d H:i') }}
-                                </p>
-                                @if (!empty($notification->data['task_title']))
-                                    <p class="text-sm text-gray-700 mt-2">
-                                        Tarea: {{ $notification->data['task_title'] }}
+                                @if ($event === 'task_assigned')
+                                    <p class="text-sm font-semibold text-gray-900">Tarea asignada</p>
+                                    <p class="text-sm text-gray-700 mt-1">
+                                        @if ($actor)
+                                            <span class="font-medium">{{ $actor->full_name }}</span> te asign&oacute; una tarea.
+                                        @else
+                                            Te asignaron una tarea.
+                                        @endif
                                     </p>
+                                @elseif ($event === 'task_time_logged')
+                                    <p class="text-sm font-semibold text-gray-900">Tiempo registrado</p>
+                                    <p class="text-sm text-gray-700 mt-1">
+                                        @if ($actor)
+                                            <span class="font-medium">{{ $actor->full_name }}</span>
+                                        @else
+                                            Un usuario
+                                        @endif
+                                        registr&oacute; tiempo en una tarea.
+                                    </p>
+                                @else
+                                    <p class="text-sm font-semibold text-gray-900">
+                                        {{ $notification->data['event'] ?? 'Notificaci&oacute;n' }}
+                                    </p>
+                                @endif
+
+                                <p class="text-xs text-gray-500 mt-1">
+                                    {{ ($assignedAt ?? $occurredAt ?? $notification->created_at)?->format('Y-m-d H:i') }}
+                                </p>
+
+                                @if ($task)
+                                    <div class="text-sm text-gray-700 mt-2">
+                                        Tarea:
+                                        @if ($taskLink)
+                                            <a href="{{ $taskLink }}" class="text-primary-600 hover:underline">{{ $task->title }}</a>
+                                        @else
+                                            {{ $task->title }}
+                                        @endif
+                                    </div>
+                                    @if ($task->due_date)
+                                        <p class="text-xs text-gray-500">Fecha l&iacute;mite: {{ $task->due_date->format('d/m/Y') }}</p>
+                                    @endif
+                                @elseif (!empty($notification->data['task_title']))
+                                    <p class="text-sm text-gray-700 mt-2">Tarea: {{ $notification->data['task_title'] }}</p>
+                                @endif
+
+                                @if ($event === 'task_time_logged' && !empty($meta['duration_seconds']))
+                                    @php($minutes = round(($meta['duration_seconds'] ?? 0) / 60, 1))
+                                    <p class="text-xs text-gray-500 mt-1">Duraci&oacute;n: {{ $minutes }} min ({{ $meta['source'] ?? 'manual' }})</p>
                                 @endif
                             </div>
                             <div class="flex items-center gap-2">

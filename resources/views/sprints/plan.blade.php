@@ -3,6 +3,19 @@
 @section('header')
 <div class="flex flex-wrap justify-between items-center gap-3">
         <div>
+            <nav class="text-xs text-gray-500 mb-2">
+                <a href="{{ route('dashboard') }}" class="hover:text-primary-600">Inicio</a>
+                <span class="mx-1">/</span>
+                <a href="{{ route('projects.index') }}" class="hover:text-primary-600">Proyectos</a>
+                <span class="mx-1">/</span>
+                <a href="{{ route('projects.show', $project) }}" class="hover:text-primary-600">{{ $project->name }}</a>
+                <span class="mx-1">/</span>
+                <a href="{{ route('sprints.index', $project) }}" class="hover:text-primary-600">Sprints</a>
+                <span class="mx-1">/</span>
+                <a href="{{ route('sprints.show', [$project, $sprint]) }}" class="hover:text-primary-600">{{ $sprint->name }}</a>
+                <span class="mx-1">/</span>
+                <span>Planificar</span>
+            </nav>
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                 Planificar — {{ $sprint->name }}
             </h2>

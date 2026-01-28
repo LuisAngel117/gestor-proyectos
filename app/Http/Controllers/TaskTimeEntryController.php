@@ -41,7 +41,7 @@ class TaskTimeEntryController extends Controller
         Task $task
     ): JsonResponse|RedirectResponse {
         $this->ensureProjectTaskConsistency($project, $task);
-        $this->authorize('trackTime', $task);
+        $this->authorize('trackTimeManual', $task);
 
         $data = $request->validated();
         $this->ensureEntryOwnership($request->user(), $task, (int) $data['user_id']);
@@ -81,7 +81,7 @@ class TaskTimeEntryController extends Controller
     ): JsonResponse|RedirectResponse {
         $this->ensureProjectTaskConsistency($project, $task);
         $this->ensureTaskEntryConsistency($task, $timeEntry);
-        $this->authorize('trackTime', $task);
+        $this->authorize('trackTimeManual', $task);
 
         $data = $request->validated();
         $targetUserId = (int) ($data['user_id'] ?? $timeEntry->user_id);
@@ -117,7 +117,7 @@ class TaskTimeEntryController extends Controller
     ): JsonResponse|RedirectResponse {
         $this->ensureProjectTaskConsistency($project, $task);
         $this->ensureTaskEntryConsistency($task, $timeEntry);
-        $this->authorize('trackTime', $task);
+        $this->authorize('trackTimeManual', $task);
         $this->ensureEntryOwnership($request->user(), $task, $timeEntry->user_id, $timeEntry);
 
         $timeEntry->delete();

@@ -5,6 +5,11 @@
 @section('content')
 <div class="flex flex-wrap justify-between items-center gap-4 mb-6">
     <div>
+        <nav class="text-xs text-gray-500 mb-2">
+            <a href="{{ route('dashboard') }}" class="hover:text-primary-600">Inicio</a>
+            <span class="mx-1">/</span>
+            <span>Equipos</span>
+        </nav>
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
             {{ $isSuperadmin ? __('Todos los Equipos') : __('Mis Equipos') }}
         </h2>
@@ -12,12 +17,32 @@
             {{ $isSuperadmin ? 'Vista global para superadmin.' : 'Equipos donde participas o administras.' }}
         </p>
     </div>
-    <a href="{{ route('teams.create') }}" class="btn-primary">
-        <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-        </svg>
-        Crear Equipo
-    </a>
+    @can('create', App\Models\Team::class)
+        <a href="{{ route('teams.create') }}" class="btn-primary">
+            <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            Crear Equipo
+        </a>
+    @endcan
+</div>
+
+<div class="card mb-6">
+    <div class="card-body">
+        <h3 class="text-sm font-semibold text-gray-900 mb-2">Gu&iacute;a r&aacute;pida</h3>
+        <p class="text-sm text-gray-600 mb-3">Crea un equipo, agrega miembros y luego crea proyectos.</p>
+        <ol class="text-sm text-gray-600 space-y-1 list-decimal list-inside">
+            <li>Crea tu equipo principal.</li>
+            <li>Agrega miembros con su rol.</li>
+            <li>Selecciona el equipo y crea proyectos.</li>
+        </ol>
+        <div class="flex flex-wrap gap-2 mt-4">
+            @can('create', App\Models\Team::class)
+                <a href="{{ route('teams.create') }}" class="btn-primary text-xs">Crear equipo</a>
+            @endcan
+            <a href="{{ route('projects.index') }}" class="btn-secondary text-xs">Ver proyectos</a>
+        </div>
+    </div>
 </div>
 
 <div class="card mb-6">

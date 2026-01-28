@@ -61,6 +61,8 @@ class TeamController extends Controller
      */
     public function create()
     {
+        $this->authorize('create', Team::class);
+
         return view('teams.create');
     }
 
@@ -69,6 +71,8 @@ class TeamController extends Controller
      */
     public function store(Request $request)
     {
+        $this->authorize('create', Team::class);
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:1000'],
@@ -105,6 +109,7 @@ class TeamController extends Controller
         $memberIds = $team->users->pluck('id')->toArray();
         $availableUsers = User::query()
             ->when(count($memberIds) > 0, fn ($query) => $query->whereNotIn('id', $memberIds))
+            ->where('estado', 'activo')
             ->orderBy('name')
             ->get();
         $projects = ProjectVisibility::visibleProjectsForTeam($user, $team)

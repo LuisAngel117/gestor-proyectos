@@ -36,7 +36,7 @@ class ProjectPolicy
         }
 
         // Admin u owner del team puede verlo (visión administrativa)
-        return in_array($user->roleInTeam($project->team_id), ['owner', 'admin']);
+        return in_array($user->roleInTeam($project->team_id), ['owner', 'admin', 'observer']);
     }
 
     /**

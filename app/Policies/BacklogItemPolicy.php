@@ -22,7 +22,7 @@ class BacklogItemPolicy
     public function viewAny(User $user, Project $project): bool
     {
         return $user->roleInProject($project->id) !== null
-            || in_array($user->roleInTeam($project->team_id), ['owner', 'admin'], true);
+            || in_array($user->roleInTeam($project->team_id), ['owner', 'admin', 'observer'], true);
     }
 
     /**
@@ -33,7 +33,7 @@ class BacklogItemPolicy
         $project = $backlogItem->project;
 
         return $user->roleInProject($project->id) !== null
-            || in_array($user->roleInTeam($project->team_id), ['owner', 'admin'], true);
+            || in_array($user->roleInTeam($project->team_id), ['owner', 'admin', 'observer'], true);
     }
 
     /**

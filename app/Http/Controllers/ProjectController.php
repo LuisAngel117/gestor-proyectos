@@ -158,6 +158,7 @@ class ProjectController extends Controller
             ->loadCount(['tasks', 'backlogItems']);
 
         $availableMembers = $project->team->users
+            ->filter(fn ($user) => $user->estado === 'activo')
             ->filter(fn ($user) => !$project->members->contains($user))
             ->sortBy('name');
 

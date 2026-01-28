@@ -21,7 +21,7 @@
             <tr>
                 <th>Usuario</th>
                 <th>Email</th>
-                <th>Rol</th>
+                <th>Rol del sistema</th>
                 <th>Estado</th>
                 <th>Equipos</th>
                 <th>Proyectos</th>

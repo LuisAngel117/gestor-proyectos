@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\MessageController;
+use App\Http\Controllers\Auth\FirstLoginController;
 use App\Http\Controllers\BacklogItemController;
 use App\Http\Controllers\ProjectCalendarController;
 use App\Http\Controllers\ProjectDashboardController;
@@ -47,49 +48,62 @@ Route::get('/', function () {
 });
 
 Route::get('/dashboard', function () {
+    $user = request()->user();
+    $isSuperadmin = $user?->isSuperadmin() ?? false;
+
+    $teamsQuery = $isSuperadmin ? Team::query() : $user->teams();
+    $projectsQuery = $isSuperadmin ? Project::query() : $user->projects();
+
     return view('dashboard', [
-        'usersCount' => User::count(),
-        'teamsCount' => Team::count(),
-        'projectsCount' => Project::count(),
-        'recentUsers' => User::orderByDesc('created_at')->take(5)->get(),
-        'recentTeams' => Team::with('owner')->orderByDesc('created_at')->take(5)->get(),
-        'recentProjects' => Project::with('team')->orderByDesc('created_at')->take(5)->get(),
+        'isSuperadmin' => $isSuperadmin,
+        'usersCount' => $isSuperadmin ? User::count() : null,
+        'teamsCount' => $teamsQuery->count(),
+        'projectsCount' => $projectsQuery->count(),
+        'recentUsers' => $isSuperadmin ? User::orderByDesc('created_at')->take(5)->get() : collect(),
+        'recentTeams' => $teamsQuery->with('owner')->orderByDesc('created_at')->take(5)->get(),
+        'recentProjects' => $projectsQuery->with('team')->orderByDesc('created_at')->take(5)->get(),
     ]);
-})->middleware(['auth', 'verified'])->name('dashboard');
+})->middleware(['auth', 'verified', 'first-login'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
-    Route::get('/notifications', [NotificationController::class, 'index'])
+    Route::get('/first-login', [FirstLoginController::class, 'show'])
+        ->name('first-login.show');
+    Route::put('/first-login', [FirstLoginController::class, 'update'])
+        ->name('first-login.update');
+
+    Route::middleware('first-login')->group(function () {
+        Route::get('/notifications', [NotificationController::class, 'index'])
         ->name('notifications.index');
-    Route::patch('/notifications/{notification}/read', [NotificationController::class, 'markRead'])
+        Route::patch('/notifications/{notification}/read', [NotificationController::class, 'markRead'])
         ->name('notifications.read');
-    Route::patch('/notifications/read-all', [NotificationController::class, 'markAllRead'])
+        Route::patch('/notifications/read-all', [NotificationController::class, 'markAllRead'])
         ->name('notifications.read-all');
-    Route::get('/messages', [MessageController::class, 'inbox'])
+        Route::get('/messages', [MessageController::class, 'inbox'])
         ->name('messages.index');
-    Route::get('/messages/data', [MessageController::class, 'index'])
+        Route::get('/messages/data', [MessageController::class, 'index'])
         ->name('messages.data');
-    Route::post('/messages', [MessageController::class, 'store'])
+        Route::post('/messages', [MessageController::class, 'store'])
         ->name('messages.store');
     // Rutas de perfil de Breeze (gestión de cuenta)
-    Route::get('/profile/account', [ProfileController::class, 'edit'])
+        Route::get('/profile/account', [ProfileController::class, 'edit'])
         ->middleware('password.confirm')
         ->name('profile.edit');
-    Route::patch('/profile/account', [ProfileController::class, 'update'])
+        Route::patch('/profile/account', [ProfileController::class, 'update'])
         ->middleware('password.confirm')
         ->name('profile.update');
-    Route::delete('/profile/account', [ProfileController::class, 'destroy'])->name('profile.destroy');
+        Route::delete('/profile/account', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // Rutas de perfil extendido (datos adicionales del usuario)
-    Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'show'])->name('profile.show');
-    Route::get('/profile/edit', [\App\Http\Controllers\ProfileController::class, 'edit'])
+        Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'show'])->name('profile.show');
+        Route::get('/profile/edit', [\App\Http\Controllers\ProfileController::class, 'edit'])
         ->middleware('password.confirm')
         ->name('profile.edit.extended');
-    Route::put('/profile', [\App\Http\Controllers\ProfileController::class, 'update'])
+        Route::put('/profile', [\App\Http\Controllers\ProfileController::class, 'update'])
         ->middleware('password.confirm')
         ->name('profile.update.extended');
 
     // Admin (superadmin)
-    Route::prefix('admin')->name('admin.')->group(function () {
+        Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/', [AdminDashboardController::class, 'index'])->name('index');
         Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
         Route::get('/users/create', [AdminUserController::class, 'create'])->name('users.create');
@@ -100,21 +114,21 @@ Route::middleware('auth')->group(function () {
         Route::post('/users/export-pdf', [AdminUserController::class, 'exportPdf'])->name('users.export-pdf');
         Route::post('/users/{user}/deactivate', [AdminUserController::class, 'deactivate'])->name('users.deactivate');
         Route::patch('/users/{user}', [AdminUserController::class, 'update'])->name('users.update');
-    });
+        });
 
     // Rutas de equipos
-    Route::resource('teams', \App\Http\Controllers\TeamController::class);
-    Route::get('teams/{team}/members', [TeamMemberController::class, 'index'])
+        Route::resource('teams', \App\Http\Controllers\TeamController::class);
+        Route::get('teams/{team}/members', [TeamMemberController::class, 'index'])
         ->name('teams.members.index');
-    Route::post('teams/{team}/members', [TeamMemberController::class, 'store'])
+        Route::post('teams/{team}/members', [TeamMemberController::class, 'store'])
         ->name('teams.members.store');
-    Route::patch('teams/{team}/members/{user}', [TeamMemberController::class, 'update'])
+        Route::patch('teams/{team}/members/{user}', [TeamMemberController::class, 'update'])
         ->name('teams.members.update');
-    Route::delete('teams/{team}/members/{user}', [TeamMemberController::class, 'destroy'])
+        Route::delete('teams/{team}/members/{user}', [TeamMemberController::class, 'destroy'])
         ->name('teams.members.destroy');
 
     // Rutas de proyectos
-    Route::middleware('team.context')->group(function () {
+        Route::middleware('team.context')->group(function () {
         Route::resource('projects', \App\Http\Controllers\ProjectController::class);
         Route::patch('projects/{project}/owner', [\App\Http\Controllers\ProjectController::class, 'transferOwner'])
             ->name('projects.transfer-owner');
@@ -261,6 +275,7 @@ Route::middleware('auth')->group(function () {
 
         Route::post('projects/{project}/ownership', [ProjectOwnershipController::class, 'store'])
             ->name('projects.ownership.transfer');
+        });
     });
 });
 

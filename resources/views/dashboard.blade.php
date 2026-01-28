@@ -21,7 +21,7 @@
                     <div>
                         <p class="text-xs uppercase tracking-wide text-gray-500">Equipos</p>
                         <p class="text-2xl font-semibold text-gray-900">{{ $teamsCount }}</p>
-                        <p class="text-xs text-gray-500 mt-1">Total registrados</p>
+                        <p class="text-xs text-gray-500 mt-1">{{ $isSuperadmin ? 'Total registrados' : 'Tus equipos' }}</p>
                     </div>
                     <div class="h-10 w-10 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center">
                         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -37,7 +37,7 @@
                     <div>
                         <p class="text-xs uppercase tracking-wide text-gray-500">Proyectos</p>
                         <p class="text-2xl font-semibold text-gray-900">{{ $projectsCount }}</p>
-                        <p class="text-xs text-gray-500 mt-1">Activos y en progreso</p>
+                        <p class="text-xs text-gray-500 mt-1">{{ $isSuperadmin ? 'Activos y en progreso' : 'Tus proyectos' }}</p>
                     </div>
                     <div class="h-10 w-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center">
                         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -47,22 +47,24 @@
                 </div>
             </div>
         </div>
-        <div class="card">
-            <div class="card-body">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-xs uppercase tracking-wide text-gray-500">Usuarios</p>
-                        <p class="text-2xl font-semibold text-gray-900">{{ $usersCount }}</p>
-                        <p class="text-xs text-gray-500 mt-1">Registrados</p>
-                    </div>
-                    <div class="h-10 w-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center">
-                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.12 17.74A7 7 0 0112 3a7 7 0 016.88 14.74M12 12a4 4 0 100-8 4 4 0 000 8z" />
-                        </svg>
+        @if($isSuperadmin)
+            <div class="card">
+                <div class="card-body">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs uppercase tracking-wide text-gray-500">Usuarios</p>
+                            <p class="text-2xl font-semibold text-gray-900">{{ $usersCount }}</p>
+                            <p class="text-xs text-gray-500 mt-1">Registrados</p>
+                        </div>
+                        <div class="h-10 w-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center">
+                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.12 17.74A7 7 0 0112 3a7 7 0 016.88 14.74M12 12a4 4 0 100-8 4 4 0 000 8z" />
+                            </svg>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+        @endif
         <div class="card">
             <div class="card-body">
                 <div class="flex items-center justify-between">
@@ -162,7 +164,7 @@
                     <div class="space-y-2 text-sm text-gray-600">
                         <p><span class="font-semibold">Nombre:</span> {{ Auth::user()->name }}</p>
                         <p><span class="font-semibold">Email:</span> {{ Auth::user()->email }}</p>
-                        <p><span class="font-semibold">Rol:</span> {{ Auth::user()->role }}</p>
+                        <p><span class="font-semibold">Rol del sistema:</span> {{ Auth::user()->role }}</p>
                     </div>
                 </div>
             </div>

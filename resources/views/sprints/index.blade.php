@@ -3,6 +3,15 @@
 @section('header')
 <div class="flex flex-wrap justify-between items-center gap-3">
         <div>
+            <nav class="text-xs text-gray-500 mb-2">
+                <a href="{{ route('dashboard') }}" class="hover:text-primary-600">Inicio</a>
+                <span class="mx-1">/</span>
+                <a href="{{ route('projects.index') }}" class="hover:text-primary-600">Proyectos</a>
+                <span class="mx-1">/</span>
+                <a href="{{ route('projects.show', $project) }}" class="hover:text-primary-600">{{ $project->name }}</a>
+                <span class="mx-1">/</span>
+                <span>Sprints</span>
+            </nav>
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                 Sprints — {{ $project->name }}
             </h2>
@@ -22,10 +31,32 @@
 
 
 <div class="space-y-6">
+    <div class="card">
+        <div class="card-body">
+            <h3 class="text-sm font-semibold text-gray-900 mb-2">Gu&iacute;a r&aacute;pida</h3>
+            <p class="text-sm text-gray-600 mb-3">Sigue este flujo para ver el sprint activo en el tablero.</p>
+            <ol class="text-sm text-gray-600 space-y-1 list-decimal list-inside">
+                <li>Crea un sprint en <span class="font-semibold">planificaci&oacute;n</span>.</li>
+                <li>Asigna &iacute;tems del backlog al sprint.</li>
+                <li>Inicia el sprint y gestiona tareas en el tablero.</li>
+            </ol>
+            <div class="flex flex-wrap gap-2 mt-4">
+                @can('update', $project)
+                    <a href="{{ route('sprints.create', $project) }}" class="btn-primary text-xs">Crear sprint</a>
+                @endcan
+                <a href="{{ route('backlog.index', $project) }}" class="btn-secondary text-xs">Ir al backlog</a>
+                <a href="{{ route('projects.scrum-board.index', $project) }}" class="btn-secondary text-xs">Abrir tablero</a>
+            </div>
+        </div>
+    </div>
     @if($sprints->isEmpty())
         <div class="card">
             <div class="card-body text-center py-10">
                 <p class="text-gray-600">Todavía no hay sprints para este proyecto.</p>
+                @can('update', $project)
+                    <a href="{{ route('sprints.create', $project) }}" class="btn-primary mt-4">Crear primer sprint</a>
+                @endcan
+                <p class="text-xs text-gray-500 mt-3">Luego asigna &iacute;tems del backlog y planifica.</p>
             </div>
         </div>
     @else

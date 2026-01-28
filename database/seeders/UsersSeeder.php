@@ -23,6 +23,8 @@ class UsersSeeder extends Seeder
             'role' => 'superadmin',
             'estado' => 'activo',
             'email_verified_at' => now(),
+            'must_change_password' => false,
+            'profile_completed_at' => now(),
             'last_login_at' => now(),
         ]);
 
@@ -35,6 +37,8 @@ class UsersSeeder extends Seeder
             'role' => 'user',
             'estado' => 'activo',
             'email_verified_at' => now(),
+            'must_change_password' => false,
+            'profile_completed_at' => now(),
             'last_login_at' => now(),
         ]);
 
@@ -46,6 +50,8 @@ class UsersSeeder extends Seeder
             'role' => 'user',
             'estado' => 'activo',
             'email_verified_at' => now(),
+            'must_change_password' => false,
+            'profile_completed_at' => now(),
         ]);
 
         User::create([
@@ -56,6 +62,8 @@ class UsersSeeder extends Seeder
             'role' => 'user',
             'estado' => 'activo',
             'email_verified_at' => now(),
+            'must_change_password' => false,
+            'profile_completed_at' => now(),
         ]);
 
         User::create([
@@ -66,6 +74,8 @@ class UsersSeeder extends Seeder
             'role' => 'user',
             'estado' => 'activo',
             'email_verified_at' => now(),
+            'must_change_password' => false,
+            'profile_completed_at' => now(),
         ]);
 
         User::create([
@@ -76,6 +86,8 @@ class UsersSeeder extends Seeder
             'role' => 'user',
             'estado' => 'activo',
             'email_verified_at' => now(),
+            'must_change_password' => false,
+            'profile_completed_at' => now(),
         ]);
 
         User::create([
@@ -86,6 +98,8 @@ class UsersSeeder extends Seeder
             'role' => 'user',
             'estado' => 'activo',
             'email_verified_at' => now(),
+            'must_change_password' => false,
+            'profile_completed_at' => now(),
         ]);
 
         User::create([
@@ -96,6 +110,8 @@ class UsersSeeder extends Seeder
             'role' => 'user',
             'estado' => 'activo',
             'email_verified_at' => now(),
+            'must_change_password' => false,
+            'profile_completed_at' => now(),
         ]);
 
         User::create([
@@ -106,6 +122,8 @@ class UsersSeeder extends Seeder
             'role' => 'user',
             'estado' => 'inactivo',
             'email_verified_at' => now(),
+            'must_change_password' => false,
+            'profile_completed_at' => now(),
         ]);
 
         User::create([
@@ -116,6 +134,8 @@ class UsersSeeder extends Seeder
             'role' => 'user',
             'estado' => 'activo',
             'email_verified_at' => now(),
+            'must_change_password' => false,
+            'profile_completed_at' => now(),
         ]);
 
         $this->command->info('✅ 10 usuarios creados exitosamente');

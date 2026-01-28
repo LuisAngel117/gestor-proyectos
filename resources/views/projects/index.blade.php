@@ -5,6 +5,16 @@
 @section('header')
     <div class="flex flex-wrap justify-between items-center gap-3">
         <div>
+            @php($selectedTeam = $teamId ? $userTeams->firstWhere('id', (int) $teamId) : null)
+            <nav class="text-xs text-gray-500 mb-2">
+                <a href="{{ route('dashboard') }}" class="hover:text-primary-600">Inicio</a>
+                <span class="mx-1">/</span>
+                <span>Proyectos</span>
+                @if($selectedTeam)
+                    <span class="mx-1">/</span>
+                    <span>{{ $selectedTeam->name }}</span>
+                @endif
+            </nav>
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                 {{ __('Proyectos') }}
             </h2>
@@ -23,6 +33,21 @@
 
 @section('content')
 <div class="space-y-6">
+    <div class="card">
+        <div class="card-body">
+            <h3 class="text-sm font-semibold text-gray-900 mb-2">Gu&iacute;a r&aacute;pida</h3>
+            <p class="text-sm text-gray-600 mb-3">Cada proyecto contiene backlog, sprints y tareas.</p>
+            <ol class="text-sm text-gray-600 space-y-1 list-decimal list-inside">
+                <li>Selecciona un equipo o crea uno nuevo.</li>
+                <li>Crea el proyecto y agrega miembros.</li>
+                <li>Define sprints y planifica el backlog.</li>
+            </ol>
+            <div class="flex flex-wrap gap-2 mt-4">
+                <a href="{{ route('projects.create') }}" class="btn-primary text-xs">Nuevo proyecto</a>
+                <a href="{{ route('teams.index') }}" class="btn-secondary text-xs">Ver equipos</a>
+            </div>
+        </div>
+    </div>
     <div class="card">
         <div class="card-body">
             <form method="GET" action="{{ route('projects.index') }}" class="flex flex-wrap gap-3 items-end">

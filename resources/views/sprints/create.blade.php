@@ -5,6 +5,17 @@
 @section('header')
     <div class="flex flex-wrap justify-between items-center gap-3">
         <div>
+            <nav class="text-xs text-gray-500 mb-2">
+                <a href="{{ route('dashboard') }}" class="hover:text-primary-600">Inicio</a>
+                <span class="mx-1">/</span>
+                <a href="{{ route('projects.index') }}" class="hover:text-primary-600">Proyectos</a>
+                <span class="mx-1">/</span>
+                <a href="{{ route('projects.show', $project) }}" class="hover:text-primary-600">{{ $project->name }}</a>
+                <span class="mx-1">/</span>
+                <a href="{{ route('sprints.index', $project) }}" class="hover:text-primary-600">Sprints</a>
+                <span class="mx-1">/</span>
+                <span>Crear</span>
+            </nav>
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">Crear Sprint</h2>
             <p class="text-sm text-gray-600 mt-1">Proyecto: {{ $project->name }}</p>
         </div>
@@ -20,7 +31,7 @@
                 @csrf
 
                 <div>
-                    <label for="name" class="form-label">Nombre del Sprint *</label>
+                    <label for="name" class="form-label">Nombre del Sprint * <span class="ml-1 text-gray-400 cursor-help" title="Ej: Sprint 1 o Entrega inicial">?</span></label>
                     <input
                         type="text"
                         id="name"
@@ -35,7 +46,7 @@
                 </div>
 
                 <div>
-                    <label for="goal" class="form-label">Objetivo</label>
+                    <label for="goal" class="form-label">Objetivo <span class="ml-1 text-gray-400 cursor-help" title="Resume el foco principal del sprint">?</span></label>
                     <textarea
                         id="goal"
                         name="goal"
@@ -50,7 +61,7 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label for="start_date" class="form-label">Fecha de inicio *</label>
+                        <label for="start_date" class="form-label">Fecha de inicio * <span class="ml-1 text-gray-400 cursor-help" title="Dia en que empieza el sprint">?</span></label>
                         <input
                             type="date"
                             id="start_date"
@@ -64,7 +75,7 @@
                         @enderror
                     </div>
                     <div>
-                        <label for="end_date" class="form-label">Fecha de fin *</label>
+                        <label for="end_date" class="form-label">Fecha de fin * <span class="ml-1 text-gray-400 cursor-help" title="Dia en que termina el sprint">?</span></label>
                         <input
                             type="date"
                             id="end_date"
@@ -80,7 +91,7 @@
                 </div>
 
                 <div>
-                    <label for="status" class="form-label">Estado *</label>
+                    <label for="status" class="form-label">Estado * <span class="ml-1 text-gray-400 cursor-help" title="Usa Planificacion para asignar backlog antes de iniciar">?</span></label>
                     <select
                         id="status"
                         name="status"

@@ -30,6 +30,18 @@
                 'email' => $user->email,
             ];
         })->values();
+        $nextStepLabel = null;
+        $nextStepUrl = null;
+        if (!$hasTeamMembers) {
+            $nextStepLabel = 'Agrega tu primer miembro';
+            $nextStepUrl = '#team-add-member';
+        } elseif (!$hasProjects) {
+            $nextStepLabel = 'Crea el primer proyecto';
+            $nextStepUrl = route('projects.create', ['team' => $team->id]);
+        } else {
+            $nextStepLabel = 'Abre el proyecto y continua';
+            $nextStepUrl = route('projects.show', $projects->first());
+        }
     @endphp
     <div class="card">
         <div class="card-body">
@@ -77,6 +89,10 @@
                     @endif
                 </li>
             </ol>
+            <div class="mt-4 flex flex-wrap items-center justify-between gap-2 border border-dashed border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-600">
+                <span>Siguiente paso recomendado:</span>
+                <a href="{{ $nextStepUrl }}" class="btn-primary text-xs">{{ $nextStepLabel }}</a>
+            </div>
         </div>
     </div>
 
@@ -127,7 +143,7 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-[1fr_1.35fr] gap-6">
 
         <div>
             <div class="card mt-4">
@@ -149,12 +165,12 @@
                                     <p class="text-xs text-gray-500">{{ $member->email }}</p>
                                 </div>
                                 <div class="flex items-center gap-2">
-                                    <span class="badge badge-secondary">{{ ucfirst($member->pivot->role) }}</span>
+                                <span class="badge badge-secondary" title="Rol en equipo">{{ ucfirst($member->pivot->role) }}</span>
                                     @can('manageMembers', $team)
                                         <form method="POST" action="{{ route('teams.members.update', [$team, $member]) }}" class="flex items-center gap-2">
                                             @csrf
                                             @method('PATCH')
-                                            <select name="role" class="form-input text-xs">
+                                            <select name="role" class="form-input text-xs min-w-[6.5rem]">
                                                 <option value="owner" @selected($member->pivot->role === 'owner')>owner</option>
                                                 <option value="admin" @selected($member->pivot->role === 'admin')>admin</option>
                                                 <option value="member" @selected($member->pivot->role === 'member')>member</option>

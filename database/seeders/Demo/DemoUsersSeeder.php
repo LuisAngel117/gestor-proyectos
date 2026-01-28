@@ -90,6 +90,8 @@ class DemoUsersSeeder extends Seeder
                     'password' => Hash::make('password'),
                     'email_verified_at' => now(),
                     'last_login_at' => now(),
+                    'must_change_password' => false,
+                    'profile_completed_at' => now(),
                 ])
             );
         }

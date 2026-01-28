@@ -33,7 +33,7 @@
             </svg>
             Tablero Scrum
         </a>
-        @can('viewAny', [\App\Models\BacklogItem::class, $project])
+        @can('create', [\App\Models\BacklogItem::class, $project])
         <a href="{{ route('backlog.index', $project) }}" class="btn-secondary">
             <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5h6M9 9h6M9 13h6M5 5h.01M5 9h.01M5 13h.01M5 17h.01M9 17h6"></path>
@@ -57,6 +57,7 @@
 </div>
 
 <div class="space-y-6">
+    @can('update', $project)
     <div class="card" id="project-assistant">
         <div class="card-body">
             <h3 class="text-sm font-semibold text-gray-900 mb-2">Asistente del proyecto</h3>
@@ -152,8 +153,47 @@
                     </div>
                 </li>
             </ol>
+            <details class="mt-4 text-sm text-gray-600">
+                <summary class="cursor-pointer font-medium text-gray-700">Glosario r&aacute;pido</summary>
+                <ul class="mt-2 space-y-1 list-disc list-inside">
+                    <li><span class="font-semibold">Backlog</span>: tareas sin sprint.</li>
+                    <li><span class="font-semibold">Sprint</span>: iteraci&oacute;n con tareas planificadas.</li>
+                    <li><span class="font-semibold">Tablero</span>: ejecuci&oacute;n del sprint activo.</li>
+                </ul>
+            </details>
+            @php
+                $nextProjectStepLabel = null;
+                $nextProjectStepUrl = null;
+                if ($project->members->count() <= 1) {
+                    $nextProjectStepLabel = 'Agregar miembros';
+                    $nextProjectStepUrl = '#project-members';
+                } elseif ($project->sprints->count() === 0) {
+                    $nextProjectStepLabel = 'Crear primer sprint';
+                    $nextProjectStepUrl = route('sprints.create', $project);
+                } elseif ($project->backlog_items_count === 0) {
+                    $nextProjectStepLabel = 'Crear primer &iacute;tem';
+                    $nextProjectStepUrl = route('backlog.create', $project);
+                } elseif ($planningSprint) {
+                    $nextProjectStepLabel = 'Planificar sprint';
+                    $nextProjectStepUrl = route('sprints.plan', [$project, $planningSprint]);
+                } elseif (!$activeSprint) {
+                    $nextProjectStepLabel = 'Iniciar sprint';
+                    $nextProjectStepUrl = route('sprints.index', $project);
+                } elseif ($project->tasks_count === 0) {
+                    $nextProjectStepLabel = 'Crear tareas';
+                    $nextProjectStepUrl = route('tasks.index', $project);
+                } else {
+                    $nextProjectStepLabel = 'Abrir tablero';
+                    $nextProjectStepUrl = route('projects.scrum-board.index', $project);
+                }
+            @endphp
+            <div class="mt-4 flex flex-wrap items-center justify-between gap-2 border border-dashed border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-600">
+                <span>Siguiente paso recomendado:</span>
+                <a href="{{ $nextProjectStepUrl }}" class="btn-primary text-xs">{{ $nextProjectStepLabel }}</a>
+            </div>
         </div>
     </div>
+    @endcan
 
     <!-- Información del proyecto -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -276,25 +316,7 @@
                 <h3 class="text-lg font-semibold text-gray-900">Miembros del Proyecto</h3>
                 @can('manageMembers', $project)
                 <div class="flex flex-wrap items-center gap-3">
-                    <form method="POST" action="{{ route('projects.transfer-owner', $project) }}" class="flex items-center gap-2">
-                        @csrf
-                        @method('PATCH')
-                        <label for="new_owner" class="text-sm text-gray-600">Transferir owner</label>
-                        <select
-                            id="new_owner"
-                            name="user_id"
-                            class="form-input text-sm"
-                            @disabled($project->members->where('pivot.role', '!=', 'owner')->isEmpty())
-                        >
-                            @foreach($project->members as $member)
-                                @if($member->pivot->role !== 'owner')
-                                    <option value="{{ $member->id }}">{{ $member->full_name }}</option>
-                                @endif
-                            @endforeach
-                        </select>
-                        <button type="submit" class="btn-secondary text-sm" @disabled($project->members->where('pivot.role', '!=', 'owner')->isEmpty())>Transferir</button>
-                    </form>
-                    <form method="POST" action="{{ route('projects.members.store', $project) }}" class="flex items-center gap-2">
+                    <form method="POST" action="{{ route('projects.members.store', $project) }}" class="flex flex-wrap items-end gap-2">
                         @csrf
                         <label for="new_member" class="text-sm text-gray-600">Agregar miembro</label>
                         <select
@@ -307,7 +329,14 @@
                                 <option value="{{ $member->id }}">{{ $member->full_name }}</option>
                             @endforeach
                         </select>
-                        <input type="hidden" name="role" value="member">
+                        <div class="flex flex-col">
+                            <label for="new_member_role" class="text-xs text-gray-500">Rol en proyecto</label>
+                            <select id="new_member_role" name="role" class="form-input text-sm">
+                                <option value="admin">Administrador</option>
+                                <option value="member" selected>Miembro</option>
+                                <option value="observer">Observador</option>
+                            </select>
+                        </div>
                         <button type="submit" class="btn-primary text-sm" @disabled($availableMembers->isEmpty())>Agregar</button>
                     </form>
                 </div>
@@ -370,13 +399,27 @@
                             </td>
                             @can('manageMembers', $project)
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                @if($member->pivot->role !== 'owner')
-                                    <form method="POST" action="{{ route('projects.members.destroy', [$project, $member]) }}">
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <form method="POST" action="{{ route('projects.members.update', [$project, $member]) }}" class="flex items-center gap-2">
                                         @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="text-red-600 hover:text-red-900">Eliminar</button>
+                                        @method('PATCH')
+                                        <label class="text-xs text-gray-500">Cambiar rol</label>
+                                        <select name="role" class="form-input text-xs">
+                                            <option value="owner" @selected($member->pivot->role === 'owner')>Owner</option>
+                                            <option value="admin" @selected($member->pivot->role === 'admin')>Administrador</option>
+                                            <option value="member" @selected($member->pivot->role === 'member')>Miembro</option>
+                                            <option value="observer" @selected($member->pivot->role === 'observer')>Observador</option>
+                                        </select>
+                                        <button type="submit" class="btn-secondary text-xs">Actualizar</button>
                                     </form>
-                                @endif
+                                    @if($member->pivot->role !== 'owner')
+                                        <form method="POST" action="{{ route('projects.members.destroy', [$project, $member]) }}">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="text-red-600 hover:text-red-900 text-xs">Eliminar</button>
+                                        </form>
+                                    @endif
+                                </div>
                             </td>
                             @endcan
                         </tr>

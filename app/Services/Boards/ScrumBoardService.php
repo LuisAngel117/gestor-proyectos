@@ -38,7 +38,7 @@ class ScrumBoardService
         $statuses = self::STATUSES;
         $statusKeys = array_keys($statuses);
 
-        $tasks = $this->loadTasks($project, $sprint);
+        $tasks = $this->loadTasks($project, $sprint, $viewer);
         $members = $this->loadMembers($project);
 
         $assignedUsers = $tasks
@@ -88,20 +88,32 @@ class ScrumBoardService
         ];
     }
 
-    private function loadTasks(Project $project, ?Sprint $sprint): Collection
+    private function loadTasks(Project $project, ?Sprint $sprint, User $viewer): Collection
     {
         if (!$sprint) {
             return collect();
         }
 
-        return Task::query()
+        $query = Task::query()
             ->where('project_id', $project->id)
             ->where('sprint_id', $sprint->id)
             ->with(['assignees' => function ($query) {
                 $query->select('users.id', 'users.name', 'users.apellido');
             }])
-            ->orderBy('created_at')
-            ->get();
+            ->orderBy('created_at');
+
+        $projectRole = $viewer->roleInProject($project->id);
+        $teamRole = $viewer->roleInTeam($project->team_id);
+        if (
+            in_array($projectRole, ['member', 'observer'], true)
+            && !in_array($teamRole, ['owner', 'admin', 'observer'], true)
+        ) {
+            $query->whereHas('assignees', function ($assigneeQuery) use ($viewer) {
+                $assigneeQuery->where('users.id', $viewer->id);
+            });
+        }
+
+        return $query->get();
     }
 
     private function loadMembers(Project $project): Collection

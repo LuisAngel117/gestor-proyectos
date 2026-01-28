@@ -16,7 +16,7 @@ class SprintPolicy
         $project = $sprint->project;
 
         return $user->roleInProject($project->id) !== null
-            || in_array($user->roleInTeam($project->team_id), ['owner', 'admin'], true);
+            || in_array($user->roleInTeam($project->team_id), ['owner', 'admin', 'observer'], true);
     }
 
     /**

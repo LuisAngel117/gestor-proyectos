@@ -29,6 +29,8 @@ class User extends Authenticatable
         'estado',
         'avatar_path',
         'last_login_at',
+        'must_change_password',
+        'profile_completed_at',
     ];
 
     /**
@@ -49,6 +51,7 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'last_login_at' => 'datetime',
+        'profile_completed_at' => 'datetime',
         'password' => 'hashed',
     ];
 
@@ -152,6 +155,14 @@ class User extends Authenticatable
     public function updateLastLogin(): void
     {
         $this->update(['last_login_at' => now()]);
+    }
+
+    /**
+     * Determine if the user must finish the first-login setup.
+     */
+    public function requiresFirstLoginSetup(): bool
+    {
+        return (bool) $this->must_change_password || is_null($this->profile_completed_at);
     }
 
     // ==========================================

@@ -2,11 +2,19 @@
     <div class="space-y-6">
         <div>
             <p class="text-xs uppercase tracking-[0.3em] text-gray-400">Acceso</p>
-            <h1 class="text-2xl font-semibold text-gray-800">Iniciar sesion</h1>
+            <h1 class="text-2xl font-semibold text-gray-800">Iniciar sesi&oacute;n</h1>
             <p class="text-sm text-gray-500 mt-1">Usa tus credenciales para entrar al panel local.</p>
         </div>
 
         <x-auth-session-status class="text-sm" :status="session('status')" />
+
+        <div class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-700">
+            <p class="font-semibold">Importante</p>
+            <p>
+                Si es tu primera vez, la contrase&ntilde;a es temporal y el sistema te pedir&aacute; cambiarla.
+            </p>
+        </div>
+
 
         <form method="POST" action="{{ route('login') }}" class="space-y-5">
             @csrf
@@ -18,8 +26,8 @@
             </div>
 
             <div>
-                <x-input-label for="password" :value="__('Contrasena')" />
-                <x-text-input id="password" class="mt-2 w-full" type="password" name="password" required autocomplete="current-password" placeholder="••••••••" />
+                <x-input-label for="password" :value="html_entity_decode('Contrase&ntilde;a')" />
+                <x-text-input id="password" class="mt-2 w-full" type="password" name="password" required autocomplete="current-password" placeholder="********" />
                 <x-input-error :messages="$errors->get('password')" class="form-error" />
             </div>
 
@@ -30,7 +38,7 @@
                 </label>
                 @if (Route::has('password.request'))
                     <a class="text-sm text-app-primary hover:underline" href="{{ route('password.request') }}">
-                        {{ __('Olvidaste tu contrasena?') }}
+                        {{ html_entity_decode('&iquest;Olvidaste tu contrase&ntilde;a?') }}
                     </a>
                 @endif
             </div>

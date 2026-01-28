@@ -35,6 +35,17 @@ class TaskController extends Controller
             ->withCount(['comments', 'checklistItems', 'attachments', 'timeEntries'])
             ->orderByDesc('created_at');
 
+        $projectRole = $request->user()->roleInProject($project->id);
+        $teamRole = $request->user()->roleInTeam($project->team_id);
+        if (
+            in_array($projectRole, ['member', 'observer'], true)
+            && !in_array($teamRole, ['owner', 'admin', 'observer'], true)
+        ) {
+            $query->whereHas('assignees', function ($assigneeQuery) use ($request) {
+                $assigneeQuery->where('users.id', $request->user()->id);
+            });
+        }
+
         $this->applyFilters($request, $project, $query);
 
         $perPage = (int) $request->input('per_page', 20);
@@ -48,6 +59,7 @@ class TaskController extends Controller
             'project' => $project,
             'tasks' => $tasks,
             'statuses' => ScrumBoardService::STATUSES,
+            'doneStatuses' => TaskStatusTrackingService::DONE_STATUSES,
             'priorities' => ['baja', 'media', 'alta', 'urgente'],
             'sprints' => $project->sprints()->orderByDesc('start_date')->get(),
             'assignees' => $project->members()->orderBy('name')->get(),

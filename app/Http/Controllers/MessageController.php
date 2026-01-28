@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Messages\StoreMessageRequest;
 use App\Models\Message;
+use App\Models\MessageRead;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -25,6 +26,12 @@ class MessageController extends Controller
     public function index(Request $request): JsonResponse
     {
         $user = $request->user();
+        $scopeType = $request->string('scope_type')->toString();
+        $scopeId = (int) $request->input('scope_id');
+
+        if (in_array($scopeType, ['team', 'project'], true) && $scopeId > 0) {
+            $this->markReadForScope($user, $scopeType, $scopeId);
+        }
         $payload = $this->buildMessagesPayload($user);
 
         return response()->json([
@@ -88,7 +95,23 @@ class MessageController extends Controller
             ->limit(60)
             ->get();
 
-        return $messages->map(function (Message $message) use ($user) {
+        $messageIds = $messages->pluck('id')->all();
+        $recipientIds = $messages->pluck('recipient_id')
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        $readEntries = collect();
+        if (!empty($messageIds)) {
+            $readEntries = MessageRead::query()
+                ->whereIn('message_id', $messageIds)
+                ->whereIn('user_id', array_unique(array_merge([$user->id], $recipientIds)))
+                ->get()
+                ->groupBy('message_id');
+        }
+
+        return $messages->map(function (Message $message) use ($user, $readEntries) {
             $senderName = trim($message->sender?->name . ' ' . $message->sender?->apellido);
             $recipientName = $message->recipient
                 ? trim($message->recipient->name . ' ' . $message->recipient->apellido)
@@ -96,6 +119,14 @@ class MessageController extends Controller
 
             $scopeType = $message->team_id ? 'team' : 'project';
             $scopeName = $message->team_id ? $message->team?->name : $message->project?->name;
+            $scopeId = $message->team_id ?: $message->project_id;
+            $sender = $message->sender;
+            $senderInitials = strtoupper(trim(($sender?->name[0] ?? '') . ($sender?->apellido[0] ?? '')));
+            $reads = $readEntries->get($message->id, collect());
+            $recipientRead = $message->recipient_id
+                ? (bool) $reads->firstWhere('user_id', $message->recipient_id)
+                : false;
+            $readByCurrent = (bool) $reads->firstWhere('user_id', $user->id);
 
             return [
                 'id' => $message->id,
@@ -105,6 +136,8 @@ class MessageController extends Controller
                 'sender' => [
                     'id' => $message->sender_id,
                     'name' => $senderName ?: $message->sender?->name,
+                    'initials' => $senderInitials,
+                    'avatar' => $sender?->avatar_path ? asset('storage/' . $sender->avatar_path) : null,
                 ],
                 'recipient' => $recipientName ? [
                     'id' => $message->recipient_id,
@@ -112,10 +145,13 @@ class MessageController extends Controller
                 ] : null,
                 'scope' => [
                     'type' => $scopeType,
+                    'id' => $scopeId,
                     'name' => $scopeName,
                     'label' => $scopeType === 'team' ? 'Equipo' : 'Proyecto',
                 ],
                 'is_own' => $message->sender_id === $user->id,
+                'read_by_current' => $readByCurrent,
+                'read_by_recipient' => $recipientRead,
             ];
         });
     }
@@ -129,9 +165,12 @@ class MessageController extends Controller
                 $recipients = $team->users
                     ->reject(fn ($member) => $member->id === $user->id)
                     ->map(function ($member) {
+                        $initials = strtoupper(trim(($member->name[0] ?? '') . ($member->apellido[0] ?? '')));
                         return [
                             'id' => $member->id,
                             'name' => trim($member->name . ' ' . $member->apellido),
+                            'initials' => $initials,
+                            'avatar' => $member->avatar_path ? asset('storage/' . $member->avatar_path) : null,
                         ];
                     })
                     ->values();
@@ -148,15 +187,22 @@ class MessageController extends Controller
             });
 
         $projectScopes = $user->projects()
-            ->with('members:id,name,apellido')
+            ->with('team.users:id,name,apellido')
             ->get()
             ->map(function ($project) use ($user) {
-                $recipients = $project->members
+                $recipients = $project->team
+                    ? $project->team->users
+                    : collect()
+                ;
+                $recipients = $recipients
                     ->reject(fn ($member) => $member->id === $user->id)
                     ->map(function ($member) {
+                        $initials = strtoupper(trim(($member->name[0] ?? '') . ($member->apellido[0] ?? '')));
                         return [
                             'id' => $member->id,
                             'name' => trim($member->name . ' ' . $member->apellido),
+                            'initials' => $initials,
+                            'avatar' => $member->avatar_path ? asset('storage/' . $member->avatar_path) : null,
                         ];
                     })
                     ->values();
@@ -173,5 +219,53 @@ class MessageController extends Controller
             });
 
         return $teamScopes->merge($projectScopes)->values();
+    }
+
+    private function markReadForScope(User $user, string $scopeType, int $scopeId): void
+    {
+        if ($scopeType === 'team' && ! $user->teams()->where('teams.id', $scopeId)->exists()) {
+            return;
+        }
+
+        if ($scopeType === 'project' && ! $user->projects()->where('projects.id', $scopeId)->exists()) {
+            return;
+        }
+
+        $query = Message::query()
+            ->where($scopeType === 'team' ? 'team_id' : 'project_id', $scopeId)
+            ->where(function ($query) use ($user) {
+                $query->whereNull('recipient_id')
+                    ->orWhere('recipient_id', $user->id);
+            })
+            ->where('sender_id', '!=', $user->id)
+            ->latest()
+            ->limit(200);
+
+        $messageIds = $query->pluck('id');
+        if ($messageIds->isEmpty()) {
+            return;
+        }
+
+        $alreadyRead = MessageRead::query()
+            ->where('user_id', $user->id)
+            ->whereIn('message_id', $messageIds)
+            ->pluck('message_id')
+            ->all();
+
+        $pending = $messageIds->diff($alreadyRead);
+        if ($pending->isEmpty()) {
+            return;
+        }
+
+        $now = now();
+        $rows = $pending->map(fn ($messageId) => [
+            'message_id' => $messageId,
+            'user_id' => $user->id,
+            'read_at' => $now,
+            'created_at' => $now,
+            'updated_at' => $now,
+        ])->all();
+
+        MessageRead::insert($rows);
     }
 }

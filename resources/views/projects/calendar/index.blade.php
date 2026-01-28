@@ -5,6 +5,15 @@
 @section('header')
     <div class="flex flex-wrap justify-between items-center gap-3">
         <div>
+            <nav class="text-xs text-gray-500 mb-2">
+                <a href="{{ route('dashboard') }}" class="hover:text-primary-600">Inicio</a>
+                <span class="mx-1">/</span>
+                <a href="{{ route('projects.index') }}" class="hover:text-primary-600">Proyectos</a>
+                <span class="mx-1">/</span>
+                <a href="{{ route('projects.show', $project) }}" class="hover:text-primary-600">{{ $project->name }}</a>
+                <span class="mx-1">/</span>
+                <span>Calendario</span>
+            </nav>
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">Calendario</h2>
             <p class="text-sm text-gray-600 mt-1">Proyecto: {{ $project->name }}</p>
         </div>
@@ -18,6 +27,21 @@
 
 @section('content')
 <div class="space-y-6">
+    <div class="card">
+        <div class="card-body">
+            <h3 class="text-sm font-semibold text-gray-900 mb-2">Gu&iacute;a r&aacute;pida</h3>
+            <p class="text-sm text-gray-600 mb-3">El calendario muestra tareas con fecha objetivo.</p>
+            <ul class="text-sm text-gray-600 space-y-1 list-disc list-inside">
+                <li>Agrega fecha objetivo desde la vista de tareas.</li>
+                <li>Filtra por sprint, estado o asignado.</li>
+                <li>Las tareas sin fecha aparecen abajo.</li>
+            </ul>
+            <div class="flex flex-wrap gap-2 mt-4">
+                <a href="{{ route('tasks.index', $project) }}" class="btn-secondary text-xs">Ir a tareas</a>
+                <a href="{{ route('backlog.index', $project) }}" class="btn-secondary text-xs">Ver backlog</a>
+            </div>
+        </div>
+    </div>
     <div class="card">
         <div class="card-body">
             <form method="GET" action="{{ route('projects.calendar.index', $project) }}" class="grid grid-cols-1 md:grid-cols-4 gap-3">
@@ -94,6 +118,7 @@
             <h3 class="text-sm font-semibold text-gray-900 mb-3">Tareas sin fecha</h3>
             @if($calendar['undated_tasks']->isEmpty())
                 <p class="text-sm text-gray-500">Sin tareas sin fecha.</p>
+                <p class="text-xs text-gray-500 mt-2">Asigna una fecha objetivo desde la vista de tareas para verlas en el calendario.</p>
             @else
                 <div class="space-y-2">
                     @foreach($calendar['undated_tasks'] as $task)

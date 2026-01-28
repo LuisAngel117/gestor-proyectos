@@ -5,6 +5,17 @@
 @section('header')
     <div class="flex flex-wrap justify-between items-center gap-3">
         <div>
+            <nav class="text-xs text-gray-500 mb-2">
+                <a href="{{ route('dashboard') }}" class="hover:text-primary-600">Inicio</a>
+                <span class="mx-1">/</span>
+                <a href="{{ route('projects.index') }}" class="hover:text-primary-600">Proyectos</a>
+                <span class="mx-1">/</span>
+                <a href="{{ route('projects.show', $project) }}" class="hover:text-primary-600">{{ $project->name }}</a>
+                <span class="mx-1">/</span>
+                <a href="{{ route('tasks.index', $project) }}" class="hover:text-primary-600">Tareas</a>
+                <span class="mx-1">/</span>
+                <span>{{ $task->title }}</span>
+            </nav>
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">{{ $task->title }}</h2>
             <p class="text-sm text-gray-600 mt-1">Proyecto: {{ $project->name }}</p>
         </div>
@@ -16,7 +27,30 @@
 @endsection
 
 @section('content')
+@php
+    $activeTimerEntry = $task->timeEntries->first(function ($entry) {
+        return (int) $entry->user_id === (int) auth()->id() && $entry->stopped_at === null;
+    });
+    $requiresTimerForChecklist = !auth()->user()?->can('update', $task);
+@endphp
 <div class="space-y-6">
+    <div class="card">
+        <div class="card-body">
+            <h3 class="text-sm font-semibold text-gray-900 mb-2">Gu&iacute;a r&aacute;pida de la tarea</h3>
+            <p class="text-sm text-gray-600 mb-3">Sigue estos pasos para completar la tarea sin perderte.</p>
+            <ol class="text-sm text-gray-600 space-y-1 list-decimal list-inside">
+                <li><a href="#task-assignees" class="text-primary-600 hover:underline">Asignar responsables</a>.</li>
+                <li><a href="#task-checklist" class="text-primary-600 hover:underline">Agregar checklist</a> para dividir el trabajo.</li>
+                @can('manageDependencies', $task)
+                    <li><a href="#task-dependencies" class="text-primary-600 hover:underline">Definir dependencias</a> si hay bloqueos.</li>
+                @endcan
+                <li><a href="#task-time" class="text-primary-600 hover:underline">Registrar tiempo</a> (timer o manual).</li>
+                <li><a href="#task-comments" class="text-primary-600 hover:underline">Comentar avances</a> y acuerdos.</li>
+                <li><a href="#task-attachments" class="text-primary-600 hover:underline">Adjuntar archivos</a> relevantes.</li>
+            </ol>
+        </div>
+    </div>
+
     <div class="card">
         <div class="card-body">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -83,9 +117,10 @@
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div class="card">
+        <div class="card" id="task-assignees">
             <div class="card-body">
                 <h3 class="text-sm font-semibold text-gray-900 mb-3">Asignados</h3>
+                <p class="text-xs text-gray-500 mb-3">Selecciona qui&eacute;n trabaja en esta tarea.</p>
                 <div class="space-y-2 text-sm text-gray-600">
                     @forelse($task->assignees as $assignee)
                         <div class="flex items-center justify-between">
@@ -118,24 +153,32 @@
             </div>
         </div>
 
-        <div class="card">
+        <div class="card" id="task-checklist">
             <div class="card-body">
                 <h3 class="text-sm font-semibold text-gray-900 mb-3">Checklist</h3>
+                <p class="text-xs text-gray-500 mb-3">Divide la tarea en pasos peque&ntilde;os.</p>
+                @if($requiresTimerForChecklist && !$activeTimerEntry)
+                    <p class="text-xs text-amber-600 mb-3">Inicia el timer para poder marcar el checklist.</p>
+                @endif
                 <div class="space-y-2 text-sm">
                     @foreach($task->checklistItems as $item)
                         <div class="flex items-center justify-between border border-gray-200 rounded px-2 py-1">
                             <span>{{ $item->content }}</span>
-                            @can('update', $task)
+                            @can('toggleChecklist', $task)
                                 <form method="POST" action="{{ route('tasks.checklist.update', [$project, $task, $item]) }}" class="flex items-center gap-2">
                                     @csrf
                                     @method('PATCH')
-                                    <input type="hidden" name="content" value="{{ $item->content }}">
                                     <input type="hidden" name="is_completed" value="0">
                                     <label class="text-xs text-gray-500 flex items-center gap-1">
-                                        <input type="checkbox" name="is_completed" value="1" @checked($item->is_completed)>
+                                        <input type="checkbox" name="is_completed" value="1"
+                                            @checked($item->is_completed)
+                                            @disabled($requiresTimerForChecklist && !$activeTimerEntry)>
                                         Completar
                                     </label>
-                                    <button type="submit" class="btn-secondary text-xs">Guardar</button>
+                                    <button type="submit" class="btn-secondary text-xs"
+                                        @disabled($requiresTimerForChecklist && !$activeTimerEntry)>
+                                        Guardar
+                                    </button>
                                 </form>
                             @endcan
                         </div>
@@ -156,9 +199,11 @@
         </div>
     </div>
 
-    <div class="card">
+    @can('manageDependencies', $task)
+    <div class="card" id="task-dependencies">
         <div class="card-body">
             <h3 class="text-sm font-semibold text-gray-900 mb-3">Dependencias</h3>
+            <p class="text-xs text-gray-500 mb-3">Prerequisitos = tareas que deben terminar antes.</p>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                 <div>
                     <p class="font-medium text-gray-700 mb-2">Prerequisitos</p>
@@ -202,20 +247,34 @@
             @endcan
         </div>
     </div>
+    @endcan
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6" id="task-time">
         <div class="card">
-            <div class="card-body">
+            <div class="card-body" x-data="{starting: false, stopping: false}">
                 <h3 class="text-sm font-semibold text-gray-900 mb-3">Timer</h3>
+                <p class="text-xs text-gray-500 mb-3">Inicia y det&eacute;n para registrar tiempo real.</p>
                 @can('trackTime', $task)
                     <div class="flex gap-2">
-                        <form method="POST" action="{{ route('tasks.timer.start', [$project, $task]) }}">
+                        <form method="POST" action="{{ route('tasks.timer.start', [$project, $task]) }}"
+                              @submit="if (!confirm('¿Iniciar el timer para esta tarea?')) { $event.preventDefault(); return; } starting = true;">
                             @csrf
-                            <button type="submit" class="btn-primary text-sm">Iniciar</button>
+                            <button type="submit" class="btn-primary text-sm"
+                                    @disabled($activeTimerEntry)
+                                    x-bind:disabled="starting"
+                                    x-bind:class="starting ? 'opacity-60 cursor-not-allowed' : ''">
+                                Iniciar
+                            </button>
                         </form>
-                        <form method="POST" action="{{ route('tasks.timer.stop', [$project, $task]) }}">
+                        <form method="POST" action="{{ route('tasks.timer.stop', [$project, $task]) }}"
+                              @submit="if (!confirm('Al detener el timer, la tarea se marcará como HECHA y no podrás revertirla fácilmente. ¿Deseas continuar?')) { $event.preventDefault(); return; } stopping = true;">
                             @csrf
-                            <button type="submit" class="btn-secondary text-sm">Detener</button>
+                            <button type="submit" class="btn-secondary text-sm"
+                                    @disabled(!$activeTimerEntry)
+                                    x-bind:disabled="stopping"
+                                    x-bind:class="stopping ? 'opacity-60 cursor-not-allowed' : ''">
+                                Detener
+                            </button>
                         </form>
                     </div>
                 @else
@@ -227,7 +286,8 @@
         <div class="card">
             <div class="card-body">
                 <h3 class="text-sm font-semibold text-gray-900 mb-3">Registrar tiempo manual</h3>
-                @can('trackTime', $task)
+                <p class="text-xs text-gray-500 mb-3">Usa si olvidaste iniciar el timer.</p>
+                @can('trackTimeManual', $task)
                     <form method="POST" action="{{ route('tasks.time-entries.store', [$project, $task]) }}" class="space-y-2">
                         @csrf
                         <select name="user_id" class="form-input">
@@ -247,7 +307,7 @@
         </div>
     </div>
 
-    <div class="card">
+    <div class="card" id="task-time-entries">
         <div class="card-body">
             <h3 class="text-sm font-semibold text-gray-900 mb-3">Time entries</h3>
             @if($task->timeEntries->isEmpty())
@@ -269,9 +329,10 @@
         </div>
     </div>
 
-    <div class="card">
+    <div class="card" id="task-comments">
         <div class="card-body">
             <h3 class="text-sm font-semibold text-gray-900 mb-3">Comentarios</h3>
+            <p class="text-xs text-gray-500 mb-3">Deja avances o acuerdos con el equipo.</p>
             <div class="space-y-3">
                 @forelse($task->comments as $comment)
                     <div class="border border-gray-200 rounded px-3 py-2">
@@ -311,27 +372,21 @@
         </div>
     </div>
 
-    <div class="card">
+    <div class="card" id="task-attachments">
         <div class="card-body">
             <h3 class="text-sm font-semibold text-gray-900 mb-3">Adjuntos</h3>
+            <p class="text-xs text-gray-500 mb-3">Sube archivos relacionados con la tarea.</p>
             <div class="space-y-2 text-sm">
                 @forelse($task->attachments as $attachment)
-                    <div class="flex items-center justify-between border border-gray-200 rounded px-2 py-2">
-                        <div>
-                            <p class="text-gray-900">{{ $attachment->original_name }}</p>
-                            <p class="text-xs text-gray-500">{{ $attachment->size_bytes }} bytes</p>
+                        <div class="flex items-center justify-between border border-gray-200 rounded px-2 py-2">
+                            <div>
+                                <p class="text-gray-900">{{ $attachment->original_name }}</p>
+                                <p class="text-xs text-gray-500">{{ $attachment->size_bytes }} bytes</p>
+                            </div>
+                            <div class="flex gap-2">
+                                <a href="{{ route('tasks.attachments.download', [$project, $task, $attachment]) }}" class="btn-secondary text-xs">Descargar</a>
+                            </div>
                         </div>
-                        <div class="flex gap-2">
-                            <a href="{{ route('tasks.attachments.download', [$project, $task, $attachment]) }}" class="btn-secondary text-xs">Descargar</a>
-                            @can('update', $task)
-                                <form method="POST" action="{{ route('tasks.attachments.destroy', [$project, $task, $attachment]) }}">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="text-xs text-red-600">Eliminar</button>
-                                </form>
-                            @endcan
-                        </div>
-                    </div>
                 @empty
                     <p class="text-sm text-gray-500">Sin adjuntos.</p>
                 @endforelse
