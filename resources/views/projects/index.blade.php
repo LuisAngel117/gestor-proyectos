@@ -5,7 +5,9 @@
 @section('header')
     <div class="flex flex-wrap justify-between items-center gap-3">
         <div>
-            @php($selectedTeam = $teamId ? $userTeams->firstWhere('id', (int) $teamId) : null)
+            @php
+                $selectedTeam = $teamId ? $userTeams->firstWhere('id', (int) $teamId) : null;
+            @endphp
             <nav class="text-xs text-gray-500 mb-2">
                 <a href="{{ route('dashboard') }}" class="hover:text-primary-600">Inicio</a>
                 <span class="mx-1">/</span>
@@ -33,14 +35,42 @@
 
 @section('content')
 <div class="space-y-6">
+    @php
+        $totalProjects = $totalProjects ?? (method_exists($projects, 'total') ? $projects->total() : $projects->count());
+        $visibleProjects = $visibleProjects ?? $projects->count();
+        $teamCount = $teamCount ?? $userTeams->count();
+    @endphp
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="card">
+            <div class="card-body">
+                <p class="text-xs uppercase tracking-wide text-gray-500">Total visibles</p>
+                <p class="text-2xl font-semibold text-gray-900">{{ $totalProjects }}</p>
+                <p class="text-xs text-gray-500 mt-1">Proyectos del sistema</p>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-body">
+                <p class="text-xs uppercase tracking-wide text-gray-500">Mostrando</p>
+                <p class="text-2xl font-semibold text-gray-900">{{ $visibleProjects }}</p>
+                <p class="text-xs text-gray-500 mt-1">En esta p&aacute;gina</p>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-body">
+                <p class="text-xs uppercase tracking-wide text-gray-500">Equipos</p>
+                <p class="text-2xl font-semibold text-gray-900">{{ $teamCount }}</p>
+                <p class="text-xs text-gray-500 mt-1">Equipos disponibles</p>
+            </div>
+        </div>
+    </div>
     <div class="card">
-        <div class="card-body">
+            <div class="card-body">
             <h3 class="text-sm font-semibold text-gray-900 mb-2">Gu&iacute;a r&aacute;pida</h3>
-            <p class="text-sm text-gray-600 mb-3">Cada proyecto contiene backlog, sprints y tareas.</p>
+            <p class="text-sm text-gray-600 mb-3">Cada proyecto contiene sprints y tareas.</p>
             <ol class="text-sm text-gray-600 space-y-1 list-decimal list-inside">
                 <li>Selecciona un equipo o crea uno nuevo.</li>
                 <li>Crea el proyecto y agrega miembros.</li>
-                <li>Define sprints y planifica el backlog.</li>
+                <li>Define sprints y organiza las tareas.</li>
             </ol>
             <div class="flex flex-wrap gap-2 mt-4">
                 <a href="{{ route('projects.create') }}" class="btn-primary text-xs">Nuevo proyecto</a>
@@ -101,73 +131,50 @@
                     </form>
                 @endcan
                 <div class="flex items-start justify-between mb-3">
-                    <div class="flex-1">
-                        <h3 class="font-semibold text-lg text-gray-900 mb-1">
-                            <a href="{{ route('projects.show', $project) }}" class="hover:text-primary-600">
-                                {{ $project->name }}
-                            </a>
-                        </h3>
-                        <p class="text-xs text-gray-500">
-                            <svg class="w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                            </svg>
-                            {{ $project->team->name }}
-                        </p>
+                    <div class="flex items-center gap-3">
+                        <div class="h-10 w-10 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center text-sm font-semibold">
+                            {{ strtoupper(substr($project->name, 0, 1)) }}
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-lg text-gray-900 mb-1">
+                                <a href="{{ route('projects.show', $project) }}" class="hover:text-primary-600">
+                                    {{ $project->name }}
+                                </a>
+                            </h3>
+                            <p class="text-xs text-gray-500">
+                                {{ $project->team->name }}
+                            </p>
+                        </div>
                     </div>
-                    <span class="badge badge-{{ $project->priority_color }}">
-                        {{ $project->priority_label }}
-                    </span>
+                    <div class="flex flex-col items-end gap-2">
+                        <span class="badge badge-{{ $project->priority_color }}">
+                            {{ $project->priority_label }}
+                        </span>
+                        <span class="badge badge-{{ $project->status_color }}">
+                            {{ $project->status_label }}
+                        </span>
+                    </div>
                 </div>
 
                 <p class="text-sm text-gray-600 mb-4 line-clamp-2">
-                    {{ $project->description ?? 'Sin descripcion' }}
+                    {{ $project->description ?? 'Sin descripción' }}
                 </p>
 
-                <div class="flex items-center justify-between mb-4">
-                    <span class="badge badge-{{ $project->status_color }}">
-                        {{ $project->status_label }}
+                <div class="flex flex-wrap items-center gap-2 text-xs text-gray-600 mb-4">
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-gray-50 border border-gray-200">
+                        {{ $project->members->count() }} miembros
                     </span>
-                    <div class="flex items-center space-x-3 text-xs text-gray-500">
-                        <span class="flex items-center">
-                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
-                            </svg>
-                            {{ $project->members->count() }}
+                    @if($project->estimated_hours)
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-gray-50 border border-gray-200">
+                            {{ $project->estimated_hours }}h estimadas
                         </span>
-                        @if($project->estimated_hours)
-                        <span class="flex items-center">
-                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                            {{ $project->estimated_hours }}h
-                        </span>
-                        @endif
-                    </div>
-                </div>
-
-                @if($project->start_date || $project->due_date)
-                <div class="text-xs text-gray-500 mb-4">
-                    @if($project->start_date)
-                    <div class="flex items-center">
-                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                        </svg>
-                        Inicio: {{ $project->start_date->format('d/m/Y') }}
-                    </div>
                     @endif
                     @if($project->due_date)
-                    <div class="flex items-center {{ $project->isOverdue() ? 'text-red-600 font-semibold' : '' }}">
-                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                        </svg>
-                        Entrega: {{ $project->due_date->format('d/m/Y') }}
-                        @if($project->isOverdue())
-                        <span class="ml-1">(Vencido)</span>
-                        @endif
-                    </div>
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-gray-50 border border-gray-200 {{ $project->isOverdue() ? 'text-red-600 font-semibold' : '' }}">
+                            Entrega: {{ $project->due_date->format('d/m/Y') }}
+                        </span>
                     @endif
                 </div>
-                @endif
 
                 <div class="flex space-x-2 pt-3 border-t">
                     <a href="{{ route('projects.show', $project) }}" class="btn-secondary text-xs py-1 px-3">

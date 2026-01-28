@@ -8,6 +8,7 @@ use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
 use App\Notifications\TaskAssignedNotification;
+use App\Support\AuditLogger;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
@@ -68,6 +69,9 @@ class TaskAssigneeController extends Controller
         }
 
         $task->assignees()->syncWithoutDetaching($pivotData);
+        AuditLogger::log($request->user(), 'task.assign', $task, [
+            'assignees' => $newUserIds,
+        ]);
 
         $assignees = User::query()
             ->whereIn('id', $newUserIds)
@@ -105,6 +109,9 @@ class TaskAssigneeController extends Controller
         }
 
         $task->assignees()->detach($user->id);
+        AuditLogger::log($request->user(), 'task.unassign', $task, [
+            'assignee' => $user->id,
+        ]);
 
         if ($request->expectsJson()) {
             return response()->json([

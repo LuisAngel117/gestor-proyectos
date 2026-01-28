@@ -43,7 +43,10 @@
                                         :class="scope.key === scopeKey ? 'border-gray-200 shadow-sm' : ''"
                                         @click="selectScope(scope.key)">
                                     <p class="text-sm font-semibold text-gray-900" x-text="'Equipo: ' + scope.name"></p>
-                                    <p class="text-xs text-gray-500 mt-1">Rol: <span x-text="scope.role ?? '-'"></span></p>
+                                    <div class="flex items-center justify-between text-xs text-gray-500 mt-1">
+                                        <span>Rol: <span x-text="scope.role ?? '-'"></span></span>
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">Activo</span>
+                                    </div>
                                 </button>
                             </template>
                         </div>
@@ -53,11 +56,9 @@
                         </template>
                     </div>
 
-                    <div class="rounded-xl bg-white border border-gray-200 p-3 text-xs text-gray-500 space-y-1">
-                        <p class="font-semibold text-gray-700">Ayuda r&aacute;pida</p>
-                        <p>1. Selecciona equipo o proyecto.</p>
-                        <p>2. Elige destinatario o deja en "Todos".</p>
-                        <p>3. Escribe y env&iacute;a.</p>
+                    <div class="rounded-xl bg-white border border-gray-200 p-3 text-xs text-gray-500">
+                        <p class="font-semibold text-gray-700">Tip</p>
+                        <p>Selecciona un equipo y luego un participante para enviar mensajes directos.</p>
                     </div>
 
                     <div class="space-y-2">
@@ -75,7 +76,7 @@
                         <template x-if="recipients.length === 0">
                             <p class="text-xs text-gray-500">Sin miembros disponibles.</p>
                         </template>
-                        <div class="space-y-2 max-h-48 overflow-y-auto pr-1" x-show="recipients.length > 0">
+                        <div class="space-y-2 max-h-56 overflow-y-auto pr-1" x-show="recipients.length > 0">
                             <template x-for="member in recipients" :key="member.id">
                                 <button type="button" class="w-full text-left px-3 py-2 rounded-lg border border-transparent hover:border-gray-200 hover:bg-white transition flex items-center gap-3"
                                         :class="recipientId == member.id ? 'bg-white border-gray-200' : ''"
@@ -99,6 +100,9 @@
                         <div>
                             <p class="text-xs uppercase tracking-wide text-gray-500">Chat</p>
                             <p class="text-sm font-semibold text-gray-900" x-text="selectedScope ? (selectedScope.type === 'team' ? 'Equipo: ' : 'Proyecto: ') + selectedScope.name : 'Selecciona un destino'"></p>
+                        </div>
+                        <div class="text-xs text-gray-500" x-show="selectedScope">
+                            <span x-text="canSend ? 'Puedes enviar mensajes' : 'Solo lectura'"></span>
                         </div>
                     </div>
 
@@ -138,7 +142,7 @@
 
                     <form class="border-t border-gray-200 px-5 py-4 space-y-3 bg-white" @submit.prevent="send()">
                         <div class="text-xs text-gray-500" x-show="selectedScope">
-                            Enviando a: <span class="font-semibold text-gray-700" x-text="recipientId ? (recipients.find(member => member.id == recipientId)?.name ?? 'Usuario') : 'Todos'"></span>
+                            Enviando a: <span class="font-semibold text-gray-700" x-text="recipientId ? ((recipients.find(member => member.id == recipientId) || {}).name || 'Usuario') : 'Todos'"></span>
                         </div>
                         <div class="flex items-start gap-3">
                             <textarea class="form-input w-full" rows="2" placeholder="Escribe un mensaje…" x-model="body"></textarea>
@@ -176,8 +180,8 @@
                         return this.messages.slice().reverse();
                     }
                     return this.messages
-                        .filter((message) => message.scope?.type === this.selectedScope.type
-                            && message.scope?.id === this.selectedScope.id)
+                        .filter((message) => message.scope && message.scope.type === this.selectedScope.type
+                            && message.scope && message.scope.id === this.selectedScope.id)
                         .slice()
                         .reverse();
                 },

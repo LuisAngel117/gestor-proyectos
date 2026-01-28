@@ -3,8 +3,10 @@
 namespace App\Http\Requests\Task;
 
 use App\Models\BacklogItem;
+use App\Models\Project;
 use App\Models\Sprint;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
@@ -66,6 +68,38 @@ class StoreTaskRequest extends FormRequest
                     if ($parent->parent_id !== null) {
                         $validator->errors()->add('parent_id', 'Solo se permite un nivel de subtareas.');
                     }
+                }
+            }
+
+            if ($this->filled('due_date')) {
+                $project = Project::query()->find($projectId);
+                if ($project && $project->due_date) {
+                    $taskDue = Carbon::parse($this->input('due_date'))->startOfDay();
+                    $projectDue = Carbon::parse($project->due_date)->startOfDay();
+                    if ($taskDue->gt($projectDue)) {
+                        $validator->errors()->add(
+                            'due_date',
+                            'La fecha límite de la tarea no puede ser posterior a la fecha límite del proyecto (' . $projectDue->format('d/m/Y') . ').'
+                        );
+                    }
+                }
+                if ($project && $project->start_date) {
+                    $taskDue = Carbon::parse($this->input('due_date'))->startOfDay();
+                    $projectStart = Carbon::parse($project->start_date)->startOfDay();
+                    if ($taskDue->lt($projectStart)) {
+                        $validator->errors()->add(
+                            'due_date',
+                            'La fecha objetivo no puede ser anterior a la fecha de inicio del proyecto (' . $projectStart->format('d/m/Y') . ').'
+                        );
+                    }
+                }
+                $today = Carbon::now()->startOfDay();
+                $taskDue = Carbon::parse($this->input('due_date'))->startOfDay();
+                if ($taskDue->lt($today)) {
+                    $validator->errors()->add(
+                        'due_date',
+                        'La fecha objetivo no puede ser anterior a hoy.'
+                    );
                 }
             }
         });

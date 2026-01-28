@@ -15,7 +15,7 @@
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                 Sprints — {{ $project->name }}
             </h2>
-            <p class="text-sm text-gray-600 mt-1">Planifica el sprint backlog para este proyecto.</p>
+            <p class="text-sm text-gray-600 mt-1">Gestiona los sprints de este proyecto.</p>
         </div>
         <div class="flex gap-2">
             @can('update', $project)
@@ -31,20 +31,47 @@
 
 
 <div class="space-y-6">
+    @php
+        $totalSprints = $sprints->count();
+        $planningCount = $sprints->where('status', 'planificacion')->count();
+        $activeCount = $sprints->where('status', 'activo')->count();
+    @endphp
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="card">
+            <div class="card-body">
+                <p class="text-xs uppercase tracking-wide text-gray-500">Total sprints</p>
+                <p class="text-2xl font-semibold text-gray-900">{{ $totalSprints }}</p>
+                <p class="text-xs text-gray-500 mt-1">Registrados en el proyecto</p>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-body">
+                <p class="text-xs uppercase tracking-wide text-gray-500">Planificación</p>
+                <p class="text-2xl font-semibold text-gray-900">{{ $planningCount }}</p>
+                <p class="text-xs text-gray-500 mt-1">Listos para crear tareas</p>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-body">
+                <p class="text-xs uppercase tracking-wide text-gray-500">Activos</p>
+                <p class="text-2xl font-semibold text-gray-900">{{ $activeCount }}</p>
+                <p class="text-xs text-gray-500 mt-1">Sprints en ejecución</p>
+            </div>
+        </div>
+    </div>
     <div class="card">
         <div class="card-body">
             <h3 class="text-sm font-semibold text-gray-900 mb-2">Gu&iacute;a r&aacute;pida</h3>
-            <p class="text-sm text-gray-600 mb-3">Sigue este flujo para ver el sprint activo en el tablero.</p>
+            <p class="text-sm text-gray-600 mb-3">Sigue este flujo para activar el sprint sin vueltas.</p>
             <ol class="text-sm text-gray-600 space-y-1 list-decimal list-inside">
                 <li>Crea un sprint en <span class="font-semibold">planificaci&oacute;n</span>.</li>
-                <li>Asigna &iacute;tems del backlog al sprint.</li>
-                <li>Inicia el sprint y gestiona tareas en el tablero.</li>
+                <li>Agrega las tareas del sprint.</li>
+                <li>Inicia el sprint y ejecuta en el tablero.</li>
             </ol>
             <div class="flex flex-wrap gap-2 mt-4">
                 @can('update', $project)
                     <a href="{{ route('sprints.create', $project) }}" class="btn-primary text-xs">Crear sprint</a>
                 @endcan
-                <a href="{{ route('backlog.index', $project) }}" class="btn-secondary text-xs">Ir al backlog</a>
                 <a href="{{ route('projects.scrum-board.index', $project) }}" class="btn-secondary text-xs">Abrir tablero</a>
             </div>
         </div>
@@ -56,13 +83,20 @@
                 @can('update', $project)
                     <a href="{{ route('sprints.create', $project) }}" class="btn-primary mt-4">Crear primer sprint</a>
                 @endcan
-                <p class="text-xs text-gray-500 mt-3">Luego asigna &iacute;tems del backlog y planifica.</p>
+                <p class="text-xs text-gray-500 mt-3">Luego agrega tareas y activa el sprint.</p>
             </div>
         </div>
     @else
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             @foreach($sprints as $sprint)
-                <div class="card relative">
+                @php
+                    $statusBadge = match ($sprint->status) {
+                        'activo' => 'success',
+                        'cerrado' => 'danger',
+                        default => 'warning',
+                    };
+                @endphp
+                <div class="card relative hover:shadow-lg transition">
                     <div class="card-body">
                         @can('delete', $sprint)
                             <form method="POST" action="{{ route('sprints.destroy', [$project, $sprint]) }}" class="absolute top-3 right-3" onsubmit="return confirm('Eliminar este sprint? Esta accion no se puede deshacer.');">
@@ -75,33 +109,42 @@
                                 </button>
                             </form>
                         @endcan
-                        <div class="flex items-start justify-between mb-2">
-                            <div>
-                                <h3 class="font-semibold text-gray-900">
-                                    <a href="{{ route('sprints.show', [$project, $sprint]) }}" class="hover:text-primary-600">
-                                        {{ $sprint->name }}
-                                    </a>
-                                </h3>
-                                <p class="text-xs text-gray-500">
-                                    {{ $sprint->start_date->format('d/m/Y') }} — {{ $sprint->end_date->format('d/m/Y') }}
-                                </p>
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="flex items-center gap-3">
+                                <div class="h-10 w-10 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center text-sm font-semibold">
+                                    {{ strtoupper(substr($sprint->name, 0, 1)) }}
+                                </div>
+                                <div>
+                                    <h3 class="font-semibold text-gray-900">
+                                        <a href="{{ route('sprints.show', [$project, $sprint]) }}" class="hover:text-primary-600">
+                                            {{ $sprint->name }}
+                                        </a>
+                                    </h3>
+                                    <p class="text-xs text-gray-500">
+                                        {{ $sprint->start_date->format('d/m/Y') }} — {{ $sprint->end_date->format('d/m/Y') }}
+                                    </p>
+                                </div>
                             </div>
-                            <span class="badge badge-secondary">{{ ucfirst($sprint->status) }}</span>
+                            <span class="badge badge-{{ $statusBadge }}">{{ ucfirst($sprint->status) }}</span>
                         </div>
 
-                        <div class="flex items-center justify-between text-xs text-gray-500">
-                            <span>Secuencia #{{ $sprint->sequence }}</span>
-                            <span>{{ $sprint->backlog_items_count }} ítems</span>
+                        <div class="flex flex-wrap items-center gap-2 text-xs text-gray-600">
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-gray-50 border border-gray-200">
+                                Secuencia #{{ $sprint->sequence }}
+                            </span>
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-gray-50 border border-gray-200">
+                                {{ $sprint->tasks_count }} tareas
+                            </span>
                         </div>
 
-                        <div class="mt-4 flex space-x-2">
+                        <div class="mt-4 flex flex-wrap gap-2">
                             <a href="{{ route('sprints.show', [$project, $sprint]) }}" class="btn-secondary text-xs py-1 px-3">
                                 Ver detalles
                             </a>
                             @can('plan', $sprint)
                                 @if($sprint->isPlanning())
-                                    <a href="{{ route('sprints.plan', [$project, $sprint]) }}" class="btn-primary text-xs py-1 px-3">
-                                        Planificar
+                                    <a href="{{ route('tasks.index', $project) }}?sprint={{ $sprint->id }}#create-task" class="btn-primary text-xs py-1 px-3">
+                                        Crear tareas
                                     </a>
                                 @endif
                             @endcan

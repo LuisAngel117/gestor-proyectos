@@ -1,7 +1,10 @@
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
     <div class="card">
         <div class="card-body">
-            <p class="text-xs text-gray-500 uppercase">Usuarios</p>
+            <div class="flex items-center gap-2">
+                <p class="text-xs text-gray-500 uppercase">Usuarios</p>
+                <span class="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700">Solo activos</span>
+            </div>
             <p class="text-2xl font-semibold text-gray-900">{{ $usersCount }}</p>
         </div>
     </div>
@@ -72,7 +75,6 @@
                     </div>
                     <div class="flex flex-wrap gap-2">
                         <a href="{{ route('sprints.index', $project) }}" class="btn-secondary text-xs">Sprints</a>
-                        <a href="{{ route('backlog.index', $project) }}" class="btn-secondary text-xs">Backlog</a>
                         <a href="{{ route('tasks.index', $project) }}" class="btn-secondary text-xs">Tareas</a>
                         <a href="{{ route('projects.scrum-board.index', $project) }}" class="btn-secondary text-xs">Tablero</a>
                         <a href="{{ route('projects.calendar.index', $project) }}" class="btn-secondary text-xs">Calendario</a>
@@ -90,7 +92,10 @@
     <div class="card lg:col-span-2">
         <div class="card-body">
             <div class="flex items-center justify-between mb-3">
-                <h3 class="text-sm font-semibold text-gray-900">Ultimos usuarios</h3>
+                <div class="flex items-center gap-2">
+                    <h3 class="text-sm font-semibold text-gray-900">Ultimos usuarios</h3>
+                    <span class="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700">Solo activos</span>
+                </div>
                 <a href="{{ route('admin.users.index') }}" class="text-sm text-primary-600">Ver todos</a>
             </div>
             <div class="space-y-2 text-sm text-gray-600">

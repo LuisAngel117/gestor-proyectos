@@ -6,6 +6,7 @@ use App\Http\Requests\TeamMemberStoreRequest;
 use App\Http\Requests\TeamMemberUpdateRequest;
 use App\Models\Team;
 use App\Models\User;
+use App\Support\AuditLogger;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 
@@ -30,6 +31,10 @@ class TeamMemberController extends Controller
         $user = User::findOrFail($data['user_id']);
 
         $team->addMember($user, $data['role']);
+        AuditLogger::log($request->user(), 'team.member.add', $team, [
+            'member_id' => $user->id,
+            'role' => $data['role'],
+        ]);
 
         return redirect()
             ->to(route('teams.show', $team) . '#team-projects')
@@ -48,6 +53,10 @@ class TeamMemberController extends Controller
 
         $data = $request->validated();
         $team->updateMemberRole($user, $data['role']);
+        AuditLogger::log($request->user(), 'team.member.role', $team, [
+            'member_id' => $user->id,
+            'role' => $data['role'],
+        ]);
 
         return redirect()
             ->route('teams.show', $team)
@@ -65,6 +74,9 @@ class TeamMemberController extends Controller
         }
 
         $team->removeMember($user);
+        AuditLogger::log(request()->user(), 'team.member.remove', $team, [
+            'member_id' => $user->id,
+        ]);
 
         return redirect()
             ->route('teams.show', $team)

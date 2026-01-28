@@ -9,6 +9,7 @@ use App\Models\Project;
 use App\Models\Task;
 use App\Models\TaskChecklistItem;
 use App\Models\TaskTimeEntry;
+use App\Support\AuditLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -96,6 +97,12 @@ class TaskChecklistItemController extends Controller
         if ($payload) {
             $item->update($payload);
         }
+        if ($payload) {
+            AuditLogger::log($request->user(), 'checklist.update', $item, [
+                'task_id' => $task->id,
+                'completed' => $item->is_completed,
+            ]);
+        }
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -115,6 +122,9 @@ class TaskChecklistItemController extends Controller
 
         $item->delete();
         $this->normalizePositions($task);
+        AuditLogger::log(request()->user(), 'checklist.delete', $item, [
+            'task_id' => $task->id,
+        ]);
 
         if (request()->expectsJson()) {
             return response()->json([

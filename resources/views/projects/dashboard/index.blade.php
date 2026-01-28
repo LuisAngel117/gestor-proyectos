@@ -25,6 +25,26 @@
 <div class="space-y-6">
     <div class="card">
         <div class="card-body">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+                <div>
+                    <h3 class="text-sm font-semibold text-gray-900 mb-1">Resumen del proyecto</h3>
+                    <p class="text-sm text-gray-600">Mide avance, velocidad y carga del sprint seleccionado.</p>
+                </div>
+                <div class="flex flex-wrap gap-2 text-xs text-gray-600">
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-gray-50 border border-gray-200">
+                        Equipo: {{ $project->team->name }}
+                    </span>
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-gray-50 border border-gray-200">
+                        Miembros: {{ $project->members->count() }}
+                    </span>
+                    <span class="badge badge-{{ $project->priority_color }}">{{ $project->priority_label }}</span>
+                    <span class="badge badge-{{ $project->status_color }}">{{ $project->status_label }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body">
             <form method="GET" action="{{ route('projects.dashboard.index', $project) }}" class="flex flex-wrap gap-3 items-end">
                 <div>
                     <label class="block text-xs font-medium text-gray-600 mb-1">Sprint</label>
@@ -72,17 +92,38 @@
             </div>
         </div>
 
-        <div class="card">
-            <div class="card-body">
-                <h3 class="text-sm font-semibold text-gray-900 mb-3">Tiempo en estado (promedio)</h3>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    @foreach($metrics['time_in_state']['statuses'] as $key => $status)
-                        <div class="border border-gray-200 rounded p-3">
-                            <p class="text-sm font-semibold">{{ $status['label'] }}</p>
-                            <p class="text-xs text-gray-500">Promedio: {{ $metrics['time_in_state']['summaries'][$key]['avg_hours'] ?? 0 }}h</p>
-                            <p class="text-xs text-gray-500">Tareas: {{ $metrics['time_in_state']['summaries'][$key]['task_count'] ?? 0 }}</p>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="card lg:col-span-2">
+                <div class="card-body">
+                    <h3 class="text-sm font-semibold text-gray-900 mb-3">Tiempo en estado (promedio)</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        @foreach($metrics['time_in_state']['statuses'] as $key => $status)
+                            <div class="border border-gray-200 rounded p-3">
+                                <p class="text-sm font-semibold">{{ $status['label'] }}</p>
+                                <p class="text-xs text-gray-500">Promedio: {{ $metrics['time_in_state']['summaries'][$key]['avg_hours'] ?? 0 }}h</p>
+                                <p class="text-xs text-gray-500">Tareas: {{ $metrics['time_in_state']['summaries'][$key]['task_count'] ?? 0 }}</p>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="text-sm font-semibold text-gray-900 mb-3">Resumen del sprint</h3>
+                    <div class="space-y-2 text-sm text-gray-600">
+                        <div class="flex items-center justify-between">
+                            <span>Items completados</span>
+                            <span class="font-semibold text-gray-900">{{ $metrics['velocity']['completed_count'] ?? 0 }}</span>
                         </div>
-                    @endforeach
+                        <div class="flex items-center justify-between">
+                            <span>Horas completadas</span>
+                            <span class="font-semibold text-gray-900">{{ $metrics['velocity']['total_hours'] ?? 0 }}</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span>Estado del sprint</span>
+                            <span class="font-semibold text-gray-900">{{ $sprint->status }}</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

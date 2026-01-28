@@ -5,7 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Project;
 use App\Models\Team;
 use App\Support\Catalog;
+use App\Support\AuditLogger;
 use App\Support\Visibility\ProjectVisibility;
+use Carbon\Carbon;
+use App\Services\Tracking\TaskStatusTrackingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
@@ -107,8 +110,8 @@ class ProjectController extends Controller
             'description' => ['nullable', 'string', 'max:2000'],
             'status' => ['required', Rule::in(Catalog::projectStatuses())],
             'priority' => ['required', Rule::in(Catalog::projectPriorities())],
-            'start_date' => ['nullable', 'date'],
-            'due_date' => ['nullable', 'date', 'after_or_equal:start_date'],
+            'start_date' => ['nullable', 'date', 'after_or_equal:today'],
+            'due_date' => ['nullable', 'date', 'after_or_equal:start_date', 'after_or_equal:today'],
             'estimated_hours' => ['nullable', 'numeric', 'min:0', 'max:9999.99'],
         ]);
 
@@ -131,7 +134,7 @@ class ProjectController extends Controller
             'team_id' => $validated['team_id'],
             'name' => $validated['name'],
             'description' => $validated['description'],
-            'status' => $validated['status'],
+            'status' => 'planificacion',
             'priority' => $validated['priority'],
             'start_date' => $validated['start_date'],
             'due_date' => $validated['due_date'],
@@ -141,6 +144,9 @@ class ProjectController extends Controller
 
         // Agregar al creador como owner del proyecto
         $project->addMember($user, 'owner');
+        AuditLogger::log($user, 'project.create', $project, [
+            'name' => $project->name,
+        ]);
 
         return redirect()
             ->to(route('projects.show', $project) . '#project-assistant')
@@ -155,7 +161,27 @@ class ProjectController extends Controller
         $this->authorize('view', $project);
 
         $project->load(['team.users', 'creator', 'members', 'sprints'])
-            ->loadCount(['tasks', 'backlogItems']);
+            ->loadCount([
+                'tasks',
+                'backlogItems',
+                'tasks as done_tasks_count' => function ($query) {
+                    $query->whereIn('status', TaskStatusTrackingService::DONE_STATUSES);
+                },
+            ]);
+
+        $pendingTasks = max(0, $project->tasks_count - $project->done_tasks_count);
+        $activeSprint = $project->sprints->firstWhere('status', 'activo');
+
+        if (
+            in_array($project->status, ['planificacion', 'en_progreso'], true)
+            && $project->due_date
+            && Carbon::parse($project->due_date)->startOfDay()->lessThanOrEqualTo(Carbon::now()->startOfDay())
+            && $pendingTasks === 0
+            && !$activeSprint
+        ) {
+            $project->update(['status' => 'completado']);
+            $project->refresh();
+        }
 
         $availableMembers = $project->team->users
             ->filter(fn ($user) => $user->estado === 'activo')
@@ -167,6 +193,7 @@ class ProjectController extends Controller
             'availableMembers' => $availableMembers,
             'planningSprint' => $project->sprints->firstWhere('status', 'planificacion'),
             'activeSprint' => $project->sprints->firstWhere('status', 'activo'),
+            'pendingTasks' => $pendingTasks,
         ]);
     }
 
@@ -198,8 +225,41 @@ class ProjectController extends Controller
             'description' => ['nullable', 'string', 'max:2000'],
             'status' => ['required', Rule::in(Catalog::projectStatuses())],
             'priority' => ['required', Rule::in(Catalog::projectPriorities())],
-            'start_date' => ['nullable', 'date'],
-            'due_date' => ['nullable', 'date', 'after_or_equal:start_date'],
+            'start_date' => [
+                'nullable',
+                'date',
+                function ($attribute, $value, $fail) use ($project) {
+                    $today = Carbon::now()->startOfDay();
+                    $incoming = Carbon::parse($value)->startOfDay();
+                    $current = $project->start_date ? Carbon::parse($project->start_date)->startOfDay() : null;
+
+                    if ($incoming->lt($today) && (!$current || !$incoming->equalTo($current))) {
+                        $fail('La fecha de inicio no puede ser anterior a hoy.');
+                    }
+                },
+            ],
+            'due_date' => [
+                'nullable',
+                'date',
+                'after_or_equal:start_date',
+                function ($attribute, $value, $fail) use ($project, $request) {
+                    $today = Carbon::now()->startOfDay();
+                    $incoming = Carbon::parse($value)->startOfDay();
+                    $current = $project->due_date ? Carbon::parse($project->due_date)->startOfDay() : null;
+                    $startDate = $request->input('start_date');
+                    $effectiveStart = $startDate
+                        ? Carbon::parse($startDate)->startOfDay()
+                        : ($project->start_date ? Carbon::parse($project->start_date)->startOfDay() : null);
+
+                    if ($incoming->lt($today) && (!$current || !$incoming->equalTo($current))) {
+                        $fail('La fecha de entrega no puede ser anterior a hoy.');
+                    }
+
+                    if ($effectiveStart && $incoming->lt($effectiveStart)) {
+                        $fail('La fecha de entrega no puede ser anterior a la fecha de inicio.');
+                    }
+                },
+            ],
             'estimated_hours' => ['nullable', 'numeric', 'min:0', 'max:9999.99'],
         ]);
 
@@ -208,6 +268,9 @@ class ProjectController extends Controller
         }
 
         $project->update($validated);
+        AuditLogger::log($request->user(), 'project.update', $project, [
+            'name' => $project->name,
+        ]);
 
         return redirect()->route('projects.show', $project)
             ->with('success', 'Proyecto actualizado exitosamente');
@@ -238,6 +301,10 @@ class ProjectController extends Controller
             $project->members()->updateExistingPivot($currentOwner->id, ['role' => 'admin']);
             $project->members()->updateExistingPivot($newOwner->id, ['role' => 'owner']);
         }
+        AuditLogger::log($request->user(), 'project.transfer_owner', $project, [
+            'new_owner_id' => $newOwner->id,
+            'new_owner' => $newOwner->full_name,
+        ]);
 
         return redirect()->route('projects.show', $project)
             ->with('success', 'Propietario del proyecto actualizado.');
@@ -252,6 +319,9 @@ class ProjectController extends Controller
 
         $projectName = $project->name;
         $project->delete();
+        AuditLogger::log(Auth::user(), 'project.delete', $project, [
+            'name' => $projectName,
+        ]);
 
         return redirect()->route('projects.index')
             ->with('success', "Proyecto '{$projectName}' eliminado exitosamente");

@@ -135,7 +135,7 @@
                                 <div class="flex-1">
                                     <h4 class="font-semibold text-gray-900">{{ $team->name }}</h4>
                                     <p class="text-sm text-gray-600 mt-1 line-clamp-2">
-                                        {{ $team->description ?? 'Sin descripcion' }}
+                                        {{ $team->description ?? 'Sin descripción' }}
                                     </p>
                                     <div class="mt-3 flex items-center space-x-2">
                                         <span class="badge badge-{{ $roleBadge }}">{{ ucfirst($role) }}</span>
@@ -187,7 +187,7 @@
                                 </div>
 
                                 <p class="text-sm text-gray-600 mb-4 line-clamp-2">
-                                    {{ $project->description ?? 'Sin descripcion' }}
+                                    {{ $project->description ?? 'Sin descripción' }}
                                 </p>
 
                                 <div class="flex items-center justify-between mb-4">

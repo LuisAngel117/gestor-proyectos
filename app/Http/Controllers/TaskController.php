@@ -9,6 +9,7 @@ use App\Models\Task;
 use App\Models\TaskStatusEvent;
 use App\Services\Boards\ScrumBoardService;
 use App\Services\Tracking\TaskStatusTrackingService;
+use App\Support\AuditLogger;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -76,17 +77,38 @@ class TaskController extends Controller
         ]);
     }
 
+    public function myTasks(Request $request): View
+    {
+        $user = $request->user();
+
+        $tasks = Task::query()
+            ->whereHas('assignees', function ($query) use ($user) {
+                $query->where('users.id', $user->id);
+            })
+            ->with([
+                'project:id,name,team_id',
+                'project.team:id,name',
+                'sprint:id,name',
+            ])
+            ->orderByDesc('updated_at')
+            ->paginate(20);
+
+        return view('tasks.my', [
+            'tasks' => $tasks,
+            'statuses' => ScrumBoardService::STATUSES,
+        ]);
+    }
+
     public function store(StoreTaskRequest $request, Project $project): JsonResponse|\Illuminate\Http\RedirectResponse
     {
-        $this->authorize('create', [Task::class, $project]);
-
         $data = $request->validated();
+        $this->authorize('create', [Task::class, $project, $data['due_date'] ?? null]);
         if ((int) $data['project_id'] !== (int) $project->id) {
             abort(404);
         }
 
         $now = now();
-        $status = $data['status'];
+        $status = 'todo';
         $completedAt = in_array($status, TaskStatusTrackingService::DONE_STATUSES, true)
             ? $now
             : null;
@@ -105,6 +127,9 @@ class TaskController extends Controller
             'due_date' => $data['due_date'] ?? null,
             'estimated_hours' => $data['estimated_hours'] ?? null,
             'created_by' => $request->user()->id,
+        ]);
+        AuditLogger::log($request->user(), 'task.create', $task, [
+            'project' => $project->name,
         ]);
 
         TaskStatusEvent::create([
@@ -180,9 +205,9 @@ class TaskController extends Controller
         Task $task
     ): JsonResponse|\Illuminate\Http\RedirectResponse {
         $this->ensureProjectTaskConsistency($project, $task);
-        $this->authorize('update', $task);
 
         $data = $request->validated();
+        $this->authorize('update', [$task, $data['due_date'] ?? null]);
         if ((int) $data['project_id'] !== (int) $project->id) {
             abort(404);
         }
@@ -209,6 +234,11 @@ class TaskController extends Controller
             'subtasks:id,title,parent_id,status',
         ])->loadCount(['comments', 'checklistItems', 'attachments', 'timeEntries']);
 
+        AuditLogger::log($request->user(), 'task.update', $task, [
+            'project' => $project->name,
+            'status' => $task->status,
+        ]);
+
         if ($request->expectsJson()) {
             return response()->json([
                 'message' => 'Tarea actualizada.',
@@ -227,6 +257,9 @@ class TaskController extends Controller
         $this->authorize('delete', $task);
 
         $task->delete();
+        AuditLogger::log($request->user(), 'task.delete', $task, [
+            'project' => $project->name,
+        ]);
 
         if (request()->expectsJson()) {
             return response()->json([

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreSprintRequest;
 use App\Models\Project;
 use App\Models\Sprint;
+use App\Support\AuditLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
@@ -16,7 +17,7 @@ class SprintController extends Controller
         $this->authorize('view', $project);
 
         $sprints = $project->sprints()
-            ->withCount('backlogItems')
+            ->withCount('tasks')
             ->orderByDesc('start_date')
             ->get();
 
@@ -57,17 +58,21 @@ class SprintController extends Controller
             'status' => $data['status'],
             'created_by' => Auth::id(),
         ]);
+        AuditLogger::log($request->user(), 'sprint.create', $sprint, [
+            'name' => $sprint->name,
+            'project' => $project->name,
+        ]);
 
         return redirect()
-            ->to(route('projects.show', $project) . '#project-assistant')
-            ->with('success', 'Sprint creado.');
+            ->to(route('tasks.index', $project) . '?sprint=' . $sprint->id . '#create-task')
+            ->with('success', 'Sprint creado. Ahora agrega las tareas del sprint.');
     }
 
     public function show(Project $project, Sprint $sprint): View
     {
         $this->authorize('view', $sprint);
 
-        $sprint->loadCount('backlogItems');
+        $sprint->loadCount('tasks');
 
         return view('sprints.show', [
             'project' => $project,
@@ -83,6 +88,10 @@ class SprintController extends Controller
             abort(404);
         }
 
+        AuditLogger::log(Auth::user(), 'sprint.delete', $sprint, [
+            'name' => $sprint->name,
+            'project' => $project->name,
+        ]);
         $sprint->delete();
 
         return redirect()

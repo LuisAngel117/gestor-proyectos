@@ -38,7 +38,7 @@
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
     <div class="card">
         <div class="card-body">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Backlog sin sprint</h3>
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Tareas sin sprint</h3>
             @if($availableItems->isEmpty())
                 <p class="text-sm text-gray-600">No hay ítems disponibles para asignar.</p>
             @else
@@ -77,7 +77,7 @@
 
     <div class="card">
         <div class="card-body">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Backlog del sprint</h3>
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Trabajo del sprint</h3>
             @if($sprintItems->isEmpty())
                 <p class="text-sm text-gray-600">No hay ítems asignados todavía.</p>
             @else
@@ -112,22 +112,7 @@
                 @endcan
 
                 @can('plan', $sprint)
-                <form method="POST" action="{{ route('sprints.plan.unassign', [$project, $sprint]) }}" class="mt-6">
-                    @csrf
-                    <div class="space-y-3">
-                        @foreach($sprintItems as $item)
-                            <label class="flex items-start gap-3">
-                                <input type="checkbox" name="items[]" value="{{ $item->id }}" class="mt-1">
-                                <span class="text-sm text-gray-700">{{ $item->name }}</span>
-                            </label>
-                        @endforeach
-                    </div>
-                    <div class="mt-4 flex justify-end">
-                        <button type="submit" class="btn-secondary">Devolver al backlog</button>
-                    </div>
-                </form>
-                @else
-                <p class="mt-4 text-sm text-gray-600">No tienes permisos para desasignar ítems.</p>
+                    <p class="mt-4 text-sm text-gray-600">Para quitar ítems del sprint, elimina o ajusta sus tareas directamente.</p>
                 @endcan
             @endif
         </div>

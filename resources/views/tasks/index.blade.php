@@ -30,23 +30,24 @@
         $projectRole = $user->roleInProject($project->id);
         $teamRole = $user->roleInTeam($project->team_id);
         $canCreateTasks = $user->can('create', [\App\Models\Task::class, $project]);
-        $canManageBacklog = $user->can('create', [\App\Models\BacklogItem::class, $project]);
         $isObserver = $projectRole === 'observer' || $teamRole === 'observer';
+        $selectedSprintId = request()->integer('sprint');
+        $selectedSprint = $selectedSprintId ? $sprints->firstWhere('id', $selectedSprintId) : null;
+        $hasSprints = $sprints->count() > 0;
+        $defaultStatusKey = array_key_exists('todo', $statuses) ? 'todo' : array_key_first($statuses);
+        $defaultStatusLabel = $statuses[$defaultStatusKey]['label'] ?? 'Por hacer';
     @endphp
     <div class="card">
         <div class="card-body">
             <h3 class="text-sm font-semibold text-gray-900 mb-2">Gu&iacute;a r&aacute;pida</h3>
             @if($canCreateTasks)
-                <p class="text-sm text-gray-600 mb-3">Crea tareas en backlog o as&iacute;gnalas a un sprint.</p>
+                <p class="text-sm text-gray-600 mb-3">Crea tareas y as&iacute;gnalas al sprint activo.</p>
                 <ol class="text-sm text-gray-600 space-y-1 list-decimal list-inside">
                     <li>Define t&iacute;tulo y estado.</li>
-                    <li>Elige sprint o deja en backlog.</li>
+                    <li>Selecciona el sprint.</li>
                     <li>Luego asigna responsables y registra tiempo.</li>
                 </ol>
                 <div class="flex flex-wrap gap-2 mt-4">
-                    @if($canManageBacklog)
-                        <a href="{{ route('backlog.index', $project) }}" class="btn-secondary text-xs">Ver backlog</a>
-                    @endif
                     <a href="{{ route('sprints.index', $project) }}" class="btn-secondary text-xs">Ver sprints</a>
                     <a href="{{ route('projects.scrum-board.index', $project) }}" class="btn-secondary text-xs">Abrir tablero</a>
                 </div>
@@ -84,106 +85,167 @@
         $pendingTasks = $collection->filter(fn ($task) => !in_array($task->status, $doneStatuses, true));
         $completedTasks = $collection->filter(fn ($task) => in_array($task->status, $doneStatuses, true));
     @endphp
-
-    @can('create', [\App\Models\Task::class, $project])
-    <div class="card">
-        <div class="card-body">
-            <div class="flex flex-wrap items-center justify-between gap-2">
-                <div>
-                    <h3 class="text-sm font-semibold text-gray-900">Crear tarea</h3>
-                    <p class="text-xs text-gray-500 mt-1">Backlog = tarea sin sprint; Sprint = tarea ya planificada.</p>
-                </div>
-                <span class="text-xs text-gray-400">Gu&iacute;a por pasos</span>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="card">
+            <div class="card-body">
+                <p class="text-xs uppercase tracking-wide text-gray-500">Pendientes</p>
+                <p class="text-2xl font-semibold text-gray-900">{{ $pendingTasks->count() }}</p>
+                <p class="text-xs text-gray-500 mt-1">Por realizar</p>
             </div>
-            <form method="POST" action="{{ route('tasks.store', $project) }}" class="mt-5 space-y-6">
-                @csrf
-                <input type="hidden" name="project_id" value="{{ $project->id }}">
-                <div class="rounded-lg border border-gray-200 p-4">
-                    <h4 class="text-sm font-semibold text-gray-900 mb-3">Paso 1 · Lo b&aacute;sico</h4>
-                    <div class="space-y-3">
-                        <div>
-                            <label class="block text-xs font-medium text-gray-600 mb-1">T&iacute;tulo</label>
-                            <input type="text" name="title" class="form-input w-full" placeholder="Ej: Cortar papas" required>
-                            <p class="text-xs text-gray-500 mt-1">Nombre corto y claro de la tarea.</p>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-600 mb-1">Descripci&oacute;n</label>
-                            <textarea name="description" class="form-input w-full min-h-[160px]" rows="5" placeholder="Describe la tarea y el resultado esperado"></textarea>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="rounded-lg border border-gray-200 p-4">
-                    <h4 class="text-sm font-semibold text-gray-900 mb-3">Paso 2 · Planificaci&oacute;n</h4>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-medium text-gray-600 mb-1">Sprint</label>
-                            <select name="sprint_id" class="form-input w-full">
-                                <option value="">Backlog (sin sprint)</option>
-                                @foreach($sprints as $sprint)
-                                    <option value="{{ $sprint->id }}">{{ $sprint->name }}</option>
-                                @endforeach
-                            </select>
-                            <p class="text-xs text-gray-500 mt-1">Si no est&aacute; lista, d&eacute;jala en backlog.</p>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-600 mb-1">Estado inicial</label>
-                            <select name="status" class="form-input w-full">
-                                @foreach($statuses as $key => $status)
-                                    <option value="{{ $key }}">{{ $status['label'] }}</option>
-                                @endforeach
-                            </select>
-                            <p class="text-xs text-gray-500 mt-1">Define el avance inicial.</p>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-600 mb-1">Prioridad</label>
-                            <select name="priority" class="form-input w-full">
-                                @foreach($priorities as $priority)
-                                    <option value="{{ $priority }}">{{ $priority }}</option>
-                                @endforeach
-                            </select>
-                            <p class="text-xs text-gray-500 mt-1">Baja, media o alta.</p>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-600 mb-1">Fecha objetivo</label>
-                            <input type="date" name="due_date" class="form-input w-full">
-                            <p class="text-xs text-gray-500 mt-1">Aparece en el calendario.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="rounded-lg border border-gray-200 p-4">
-                    <h4 class="text-sm font-semibold text-gray-900 mb-3">Paso 3 · Relaciones y esfuerzo</h4>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-medium text-gray-600 mb-1">Subtarea</label>
-                            <select name="parent_id" class="form-input w-full">
-                                <option value="">Sin padre</option>
-                                @foreach($parentOptions as $parent)
-                                    <option value="{{ $parent->id }}">{{ $parent->title }}</option>
-                                @endforeach
-                            </select>
-                            <p class="text-xs text-gray-500 mt-1">Usa esto si es parte de otra tarea.</p>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-600 mb-1">Horas estimadas</label>
-                            <input type="number" name="estimated_hours" step="0.01" min="0" class="form-input w-full" placeholder="Ej: 1.5">
-                            <p class="text-xs text-gray-500 mt-1">Usado en reportes y burndown.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="flex justify-end">
-                    <button type="submit" class="btn-primary">Crear tarea</button>
-                </div>
-            </form>
+        </div>
+        <div class="card">
+            <div class="card-body">
+                <p class="text-xs uppercase tracking-wide text-gray-500">Completadas</p>
+                <p class="text-2xl font-semibold text-gray-900">{{ $completedTasks->count() }}</p>
+                <p class="text-xs text-gray-500 mt-1">Terminadas</p>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-body">
+                <p class="text-xs uppercase tracking-wide text-gray-500">Sprint actual</p>
+                <p class="text-lg font-semibold text-gray-900">
+                    {{ $selectedSprint?->name ?? ($hasSprints ? 'Selecciona uno' : 'Sin sprints') }}
+                </p>
+                <p class="text-xs text-gray-500 mt-1">Para nuevas tareas</p>
+            </div>
         </div>
     </div>
+    @can('create', [\App\Models\Task::class, $project])
+    @if(!$hasSprints)
+        <div class="card" id="create-task">
+            <div class="card-body text-center py-8">
+                <h3 class="text-sm font-semibold text-gray-900 mb-2">Primero crea un sprint</h3>
+                <p class="text-sm text-gray-600 mb-4">Para asignar tareas, necesitas al menos un sprint activo o en planificación.</p>
+                <a href="{{ route('sprints.create', $project) }}" class="btn-primary">Crear sprint</a>
+            </div>
+        </div>
+    @else
+        <div class="card" id="create-task">
+            <div class="card-body">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                        <h3 class="text-sm font-semibold text-gray-900">Crear tarea</h3>
+                        <p class="text-xs text-gray-500 mt-1">Asigna la tarea a un sprint del proyecto.</p>
+                    </div>
+                    <span class="text-xs text-gray-400">Gu&iacute;a por pasos</span>
+                </div>
+                @if($selectedSprint)
+                    <div class="mt-3 text-xs text-emerald-600 font-medium">
+                        Sprint seleccionado: {{ $selectedSprint->name }}
+                    </div>
+                @endif
+                <form method="POST" action="{{ route('tasks.store', $project) }}" class="mt-5 space-y-6">
+                    @csrf
+                    <input type="hidden" name="project_id" value="{{ $project->id }}">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        <div class="rounded-lg border border-gray-200 p-4">
+                            <h4 class="text-sm font-semibold text-gray-900 mb-3">Paso 1 · Lo b&aacute;sico</h4>
+                            <div class="space-y-3">
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">T&iacute;tulo</label>
+                                    <input type="text" name="title" class="form-input w-full" placeholder="Ej: Cortar papas" required>
+                                    <p class="text-xs text-gray-500 mt-1">Nombre corto y claro de la tarea.</p>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">Descripci&oacute;n</label>
+                                    <textarea name="description" class="form-input w-full min-h-[180px]" rows="6" placeholder="Describe la tarea y el resultado esperado"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="rounded-lg border border-gray-200 p-4">
+                            <h4 class="text-sm font-semibold text-gray-900 mb-3">Paso 2 · Planificaci&oacute;n</h4>
+                            <div class="grid grid-cols-1 gap-3">
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">Sprint</label>
+                                    <select name="sprint_id" class="form-input w-full" required>
+                                        @foreach($sprints as $sprint)
+                                            <option value="{{ $sprint->id }}" @selected((int) $sprint->id === (int) ($selectedSprint?->id))>{{ $sprint->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    <p class="text-xs text-gray-500 mt-1">Selecciona el sprint donde se ejecutar&aacute;.</p>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">Estado inicial</label>
+                                    <input type="hidden" name="status" value="{{ $defaultStatusKey }}">
+                                    <input type="text" class="form-input w-full bg-gray-100" value="{{ $defaultStatusLabel }}" disabled>
+                                    <p class="text-xs text-gray-500 mt-1">Estado inicial fijo al crear.</p>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-600 mb-1">Prioridad</label>
+                                        <select name="priority" class="form-input w-full">
+                                            @foreach($priorities as $priority)
+                                                <option value="{{ $priority }}">{{ $priority }}</option>
+                                            @endforeach
+                                        </select>
+                                        <p class="text-xs text-gray-500 mt-1">Baja, media o alta.</p>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-600 mb-1">Fecha objetivo</label>
+                                        <input type="date" name="due_date" class="form-input w-full"
+                                               @if($project->start_date)
+                                                   min="{{ $project->start_date->format('Y-m-d') }}"
+                                               @else
+                                                   min="{{ now()->toDateString() }}"
+                                               @endif
+                                               @if($project->due_date) max="{{ $project->due_date->format('Y-m-d') }}" @endif>
+                                        <p class="text-xs text-gray-500 mt-1">Aparece en el calendario.</p>
+                                        @if($project->start_date)
+                                            <p class="text-xs text-gray-500 mt-1">No disponible antes de {{ $project->start_date->format('d/m/Y') }}.</p>
+                                        @else
+                                            <p class="text-xs text-gray-500 mt-1">No disponible antes de hoy.</p>
+                                        @endif
+                                        @if($project->due_date)
+                                            <p class="text-xs text-amber-600 mt-1">No disponible despu&eacute;s de {{ $project->due_date->format('d/m/Y') }}.</p>
+                                        @endif
+                                        @error('due_date')
+                                            <p class="form-error">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="rounded-lg border border-gray-200 p-4">
+                        <h4 class="text-sm font-semibold text-gray-900 mb-3">Paso 3 · Relaciones y esfuerzo</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Subtarea</label>
+                                <select name="parent_id" class="form-input w-full">
+                                    <option value="">Sin padre</option>
+                                    @foreach($parentOptions as $parent)
+                                        <option value="{{ $parent->id }}">{{ $parent->title }}</option>
+                                    @endforeach
+                                </select>
+                                <p class="text-xs text-gray-500 mt-1">Usa esto si es parte de otra tarea.</p>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Horas estimadas</label>
+                                <input type="number" name="estimated_hours" step="0.01" min="0" class="form-input w-full" placeholder="Ej: 1.5">
+                                <p class="text-xs text-gray-500 mt-1">Usado en reportes y burndown.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end">
+                        <button type="submit" class="btn-primary">Crear tarea</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    @endif
     @endcan
 
     <div class="card">
         <div class="card-body">
-            <h3 class="text-sm font-semibold text-gray-900 mb-3">Tareas por realizar</h3>
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                <h3 class="text-sm font-semibold text-gray-900">Tareas por realizar</h3>
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-amber-50 text-amber-700 border border-amber-200">
+                    {{ $pendingTasks->count() }} pendientes
+                </span>
+            </div>
             @if($pendingTasks->count() === 0)
                 <p class="text-sm text-gray-500">No hay tareas pendientes.</p>
             @else
@@ -200,18 +262,25 @@
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
                             @foreach($pendingTasks as $task)
-                                <tr>
+                                <tr class="hover:bg-gray-50">
                                     <td class="px-4 py-3">
                                         <div class="text-sm font-medium text-gray-900">{{ $task->title }}</div>
                                         @if($task->parent)
                                             <div class="text-xs text-gray-500">Subtarea de {{ $task->parent->title }}</div>
+                                        @endif
+                                        @if($task->due_date)
+                                            <div class="text-xs text-gray-500 mt-1">Entrega: {{ $task->due_date->format('d/m/Y') }}</div>
                                         @endif
                                     </td>
                                     <td class="px-4 py-3 text-sm text-gray-600">
                                         @php($status = $statuses[$task->status] ?? ['label' => $task->status, 'color' => 'secondary'])
                                         <span class="badge badge-{{ $status['color'] }}">{{ $status['label'] }}</span>
                                     </td>
-                                    <td class="px-4 py-3 text-sm text-gray-600">{{ $task->sprint?->name ?? 'Backlog' }}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-600">
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full bg-gray-50 border border-gray-200 text-xs">
+                                            {{ $task->sprint?->name ?? 'No asignado' }}
+                                        </span>
+                                    </td>
                                     <td class="px-4 py-3 text-sm text-gray-600">{{ $task->assignees->count() }}</td>
                                     <td class="px-4 py-3 text-sm text-gray-600">
                                         <a href="{{ route('tasks.show', [$project, $task]) }}" class="btn-secondary text-xs">Ver</a>
@@ -227,7 +296,12 @@
 
     <div class="card">
         <div class="card-body">
-            <h3 class="text-sm font-semibold text-gray-900 mb-3">Tareas realizadas</h3>
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                <h3 class="text-sm font-semibold text-gray-900">Tareas realizadas</h3>
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    {{ $completedTasks->count() }} completadas
+                </span>
+            </div>
             @if($completedTasks->count() === 0)
                 <p class="text-sm text-gray-500">A&uacute;n no hay tareas completadas.</p>
             @else
@@ -244,18 +318,25 @@
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
                             @foreach($completedTasks as $task)
-                                <tr>
+                                <tr class="hover:bg-gray-50">
                                     <td class="px-4 py-3">
                                         <div class="text-sm font-medium text-gray-900">{{ $task->title }}</div>
                                         @if($task->parent)
                                             <div class="text-xs text-gray-500">Subtarea de {{ $task->parent->title }}</div>
+                                        @endif
+                                        @if($task->due_date)
+                                            <div class="text-xs text-gray-500 mt-1">Entrega: {{ $task->due_date->format('d/m/Y') }}</div>
                                         @endif
                                     </td>
                                     <td class="px-4 py-3 text-sm text-gray-600">
                                         @php($status = $statuses[$task->status] ?? ['label' => $task->status, 'color' => 'secondary'])
                                         <span class="badge badge-{{ $status['color'] }}">{{ $status['label'] }}</span>
                                     </td>
-                                    <td class="px-4 py-3 text-sm text-gray-600">{{ $task->sprint?->name ?? 'Backlog' }}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-600">
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full bg-gray-50 border border-gray-200 text-xs">
+                                            {{ $task->sprint?->name ?? 'No asignado' }}
+                                        </span>
+                                    </td>
                                     <td class="px-4 py-3 text-sm text-gray-600">{{ $task->assignees->count() }}</td>
                                     <td class="px-4 py-3 text-sm text-gray-600">
                                         <a href="{{ route('tasks.show', [$project, $task]) }}" class="btn-secondary text-xs">Ver</a>

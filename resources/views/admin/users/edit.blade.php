@@ -17,6 +17,7 @@
 @endsection
 
 @section('content')
+<div x-data="{ resetOpen: false }">
 <div class="card">
     <div class="card-body">
         @if ($errors->any())
@@ -93,10 +94,39 @@
                     <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                 @enderror
             </div>
-            <div class="md:col-span-2">
+            <div class="md:col-span-2 flex flex-wrap gap-2">
                 <button type="submit" class="btn-primary">Guardar cambios</button>
+                <button type="button" class="btn-secondary" @click="resetOpen = true">Resetear contrase&ntilde;a</button>
             </div>
         </form>
     </div>
+</div>
+
+<div
+    x-show="resetOpen"
+    x-cloak
+    class="fixed inset-0 z-[1100] flex items-center justify-center"
+    role="dialog"
+    aria-modal="true"
+>
+    <div class="absolute inset-0 bg-gray-900/50" @click="resetOpen = false"></div>
+    <div class="relative bg-white rounded-lg shadow-lg w-full max-w-md p-6">
+        <h3 class="text-lg font-semibold text-gray-900">Resetear contrase&ntilde;a</h3>
+        <p class="text-sm text-gray-600 mt-2">
+            Se asignar&aacute; una contrase&ntilde;a temporal al usuario. Al ingresar, deber&aacute; cambiarla.
+        </p>
+        <form method="POST" action="{{ route('admin.users.reset-password', $user) }}" class="mt-4 space-y-4">
+            @csrf
+            <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Contrasena de superadmin</label>
+                <input type="password" name="password" class="form-input w-full" required>
+            </div>
+            <div class="flex justify-end gap-2">
+                <button type="button" class="btn-secondary" @click="resetOpen = false">Cancelar</button>
+                <button type="submit" class="btn-danger">Resetear</button>
+            </div>
+        </form>
+    </div>
+</div>
 </div>
 @endsection

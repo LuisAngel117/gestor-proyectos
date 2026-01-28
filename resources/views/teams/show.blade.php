@@ -143,38 +143,52 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-[1fr_1.35fr] gap-6">
-
+    <div class="grid grid-cols-1 lg:grid-cols-[0.85fr_1.15fr] gap-6 items-start">
         <div>
-            <div class="card mt-4">
+            <div class="card mt-4 h-full">
                 <div class="card-body">
                     <h3 class="text-sm font-semibold text-gray-900 mb-3">Descripci&oacute;n</h3>
-                    <p class="text-sm text-gray-600">{{ $team->description ?? 'Sin descripci&oacute;n' }}</p>
+                    <p class="text-sm text-gray-600">{{ $team->description ?? 'Sin descripción' }}</p>
                 </div>
             </div>
         </div>
         <div>
-    <div class="card mt-4" id="team-members">
-        <div class="card-body">
-            <h3 class="text-sm font-semibold text-gray-900 mb-3">Miembros</h3>
-            <div class="space-y-2 text-sm">
+            <div class="card mt-4 h-full" id="team-members">
+                <div class="card-body">
+                    <h3 class="text-sm font-semibold text-gray-900 mb-3">Miembros</h3>
+                    <div class="space-y-3 text-sm">
                         @foreach($team->users as $member)
-                            <div class="flex items-center justify-between border border-gray-200 rounded px-3 py-2">
-                                <div>
-                                    <p class="text-sm font-semibold text-gray-900">{{ $member->full_name }}</p>
-                                    <p class="text-xs text-gray-500">{{ $member->email }}</p>
+                            @php
+                                $role = $member->pivot->role;
+                                $roleLabel = match ($role) {
+                                    'owner' => 'Owner',
+                                    'admin' => 'Administrador',
+                                    'observer' => 'Observador',
+                                    default => 'Miembro',
+                                };
+                                $roleBadge = match ($role) {
+                                    'owner' => 'danger',
+                                    'admin' => 'warning',
+                                    'observer' => 'info',
+                                    default => 'success',
+                                };
+                            @endphp
+                            <div class="flex items-center justify-between border border-gray-200 rounded-lg px-4 py-3 bg-white">
+                                <div class="min-w-0">
+                                    <p class="text-sm font-semibold text-gray-900 truncate">{{ $member->full_name }}</p>
+                                    <p class="text-xs text-gray-500 truncate">{{ $member->email }}</p>
                                 </div>
                                 <div class="flex items-center gap-2">
-                                <span class="badge badge-secondary" title="Rol en equipo">{{ ucfirst($member->pivot->role) }}</span>
+                                    <span class="badge badge-{{ $roleBadge }}" title="Rol en equipo">{{ $roleLabel }}</span>
                                     @can('manageMembers', $team)
                                         <form method="POST" action="{{ route('teams.members.update', [$team, $member]) }}" class="flex items-center gap-2">
                                             @csrf
                                             @method('PATCH')
-                                            <select name="role" class="form-input text-xs min-w-[6.5rem]">
-                                                <option value="owner" @selected($member->pivot->role === 'owner')>owner</option>
-                                                <option value="admin" @selected($member->pivot->role === 'admin')>admin</option>
-                                                <option value="member" @selected($member->pivot->role === 'member')>member</option>
-                                                <option value="observer" @selected($member->pivot->role === 'observer')>observer</option>
+                                            <select name="role" class="form-input text-xs min-w-[9.5rem]">
+                                                <option value="owner" @selected($role === 'owner')>Owner</option>
+                                                <option value="admin" @selected($role === 'admin')>Administrador</option>
+                                                <option value="member" @selected($role === 'member')>Miembro</option>
+                                                <option value="observer" @selected($role === 'observer')>Observador</option>
                                             </select>
                                             <button type="submit" class="btn-secondary text-xs">Actualizar</button>
                                         </form>

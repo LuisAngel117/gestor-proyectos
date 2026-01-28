@@ -18,92 +18,92 @@
             <p class="text-sm text-gray-600 mt-1">Proyecto: {{ $project->name }}</p>
         </div>
         <div class="flex gap-2">
-            <a href="{{ route('projects.calendar.index', [$project, 'month' => $calendar['prev_month']] + request()->except('month')) }}" class="btn-secondary">Mes anterior</a>
-            <a href="{{ route('projects.calendar.index', [$project, 'month' => $calendar['next_month']] + request()->except('month')) }}" class="btn-secondary">Mes siguiente</a>
             <a href="{{ route('projects.show', $project) }}" class="btn-secondary">Volver</a>
         </div>
     </div>
 @endsection
 
 @section('content')
+@php
+    $totalTasksMonth = collect($calendar['days'])->sum(fn ($day) => $day['tasks']->count());
+    $undatedCount = $calendar['undated_tasks']->count();
+    $activeSprint = $calendar['active_sprint'];
+    $colorMap = [
+        'secondary' => 'bg-slate-100 text-slate-700',
+        'warning' => 'bg-amber-100 text-amber-800',
+        'success' => 'bg-emerald-100 text-emerald-800',
+    ];
+@endphp
+
 <div class="space-y-6">
-    <div class="card">
+    <div class="card overflow-hidden">
         <div class="card-body">
-            <h3 class="text-sm font-semibold text-gray-900 mb-2">Gu&iacute;a r&aacute;pida</h3>
-            <p class="text-sm text-gray-600 mb-3">El calendario muestra tareas con fecha objetivo.</p>
-            <ul class="text-sm text-gray-600 space-y-1 list-disc list-inside">
-                <li>Agrega fecha objetivo desde la vista de tareas.</li>
-                <li>Filtra por sprint, estado o asignado.</li>
-                <li>Las tareas sin fecha aparecen abajo.</li>
-            </ul>
-            <div class="flex flex-wrap gap-2 mt-4">
-                <a href="{{ route('tasks.index', $project) }}" class="btn-secondary text-xs">Ir a tareas</a>
-                <a href="{{ route('backlog.index', $project) }}" class="btn-secondary text-xs">Ver backlog</a>
+            <div class="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                    <p class="text-xs uppercase tracking-wide text-primary-600">Calendario de proyecto</p>
+                    <h3 class="text-lg font-semibold text-gray-900 mt-1">{{ $calendar['month_label'] }}</h3>
+                    <p class="text-sm text-gray-600 mt-1">Revisa fechas objetivo y sprints activos sin perder el flujo.</p>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <a href="{{ route('tasks.index', $project) }}" class="btn-primary text-xs">Ir a tareas</a>
+                    <a href="{{ route('projects.show', $project) }}" class="btn-secondary text-xs">Resumen del proyecto</a>
+                </div>
             </div>
-        </div>
-    </div>
-    <div class="card">
-        <div class="card-body">
-            <form method="GET" action="{{ route('projects.calendar.index', $project) }}" class="grid grid-cols-1 md:grid-cols-4 gap-3">
-                <input type="hidden" name="month" value="{{ $calendar['month_value'] }}">
-                <div>
-                    <label class="block text-xs font-medium text-gray-600 mb-1">Sprint</label>
-                    <select name="sprint" class="form-input">
-                        <option value="">Todos</option>
-                        <option value="active" @selected(($calendar['filters']['sprint'] ?? '') === 'active')>Activo</option>
-                        <option value="backlog" @selected(($calendar['filters']['sprint'] ?? '') === 'backlog')>Backlog</option>
-                        @foreach($sprints as $sprint)
-                            <option value="{{ $sprint->id }}" @selected((string) ($calendar['filters']['sprint'] ?? '') === (string) $sprint->id)>{{ $sprint->name }}</option>
-                        @endforeach
-                    </select>
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mt-5">
+                <div class="p-4 rounded-xl border border-gray-200 bg-white">
+                    <p class="text-xs text-gray-500">Tareas del mes</p>
+                    <p class="text-xl font-semibold text-gray-900">{{ $totalTasksMonth }}</p>
                 </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-600 mb-1">Estado</label>
-                    <select name="status" class="form-input">
-                        <option value="">Todos</option>
-                        @foreach($calendar['statuses'] as $key => $status)
-                            <option value="{{ $key }}" @selected(($calendar['filters']['status'] ?? '') === $key)>{{ $status['label'] }}</option>
-                        @endforeach
-                    </select>
+                <div class="p-4 rounded-xl border border-gray-200 bg-white">
+                    <p class="text-xs text-gray-500">Sin fecha</p>
+                    <p class="text-xl font-semibold text-gray-900">{{ $undatedCount }}</p>
                 </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-600 mb-1">Asignado</label>
-                    <select name="assignee" class="form-input">
-                        <option value="">Todos</option>
-                        @foreach($assignees as $assignee)
-                            <option value="{{ $assignee->id }}" @selected((string) ($calendar['filters']['assignee'] ?? '') === (string) $assignee->id)>{{ $assignee->name }} {{ $assignee->apellido }}</option>
-                        @endforeach
-                    </select>
+                <div class="p-4 rounded-xl border border-gray-200 bg-white">
+                    <p class="text-xs text-gray-500">Sprint activo</p>
+                    <p class="text-sm font-semibold text-gray-900">{{ $activeSprint?->name ?? 'Sin sprint activo' }}</p>
                 </div>
-                <div class="flex items-end gap-2">
-                    <button type="submit" class="btn-secondary">Aplicar</button>
-                    <a href="{{ route('projects.calendar.index', $project) }}" class="btn-secondary">Limpiar</a>
+                <div class="p-4 rounded-xl border border-gray-200 bg-white">
+                    <p class="text-xs text-gray-500">Rango visible</p>
+                    <p class="text-sm font-semibold text-gray-900">{{ $calendar['range_start']->format('d M') }} - {{ $calendar['range_end']->format('d M') }}</p>
                 </div>
-            </form>
-            @if(!empty($calendar['warnings']))
-                <div class="mt-3 text-sm text-yellow-600">
-                    @foreach($calendar['warnings'] as $warning)
-                        <p>{{ $warning }}</p>
-                    @endforeach
-                </div>
-            @endif
+            </div>
         </div>
     </div>
 
     <div class="card">
         <div class="card-body">
-            <h3 class="text-sm font-semibold text-gray-900 mb-4">{{ $calendar['month_label'] }}</h3>
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                <div>
+                    <h3 class="text-sm font-semibold text-gray-900">{{ $calendar['month_label'] }}</h3>
+                    <p class="text-xs text-gray-500">Hoy: {{ now()->format('d M') }}</p>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <a href="{{ route('projects.calendar.index', [$project, 'month' => $calendar['prev_month']] + request()->except('month')) }}" class="btn-secondary text-xs">Mes anterior</a>
+                    <a href="{{ route('projects.calendar.index', [$project, 'month' => $calendar['next_month']] + request()->except('month')) }}" class="btn-secondary text-xs">Mes siguiente</a>
+                </div>
+            </div>
             <div class="grid grid-cols-7 gap-2 text-xs text-gray-500 mb-2">
                 <div>Lun</div><div>Mar</div><div>Mie</div><div>Jue</div><div>Vie</div><div>Sab</div><div>Dom</div>
             </div>
             <div class="grid grid-cols-7 gap-2">
                 @foreach($calendar['days'] as $day)
-                    <div class="border border-gray-200 rounded p-2 min-h-[110px] {{ $day['is_current_month'] ? '' : 'bg-gray-50' }}">
-                        <div class="text-xs font-semibold text-gray-700">{{ $day['date']->format('d') }}</div>
-                        <div class="mt-1 space-y-1">
+                    <div class="border border-gray-200 rounded-lg p-2 min-h-[120px] {{ $day['is_current_month'] ? 'bg-white' : 'bg-gray-50' }} {{ $day['date']->isToday() ? 'ring-1 ring-primary-500' : '' }}">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold {{ $day['date']->isToday() ? 'text-primary-700' : 'text-gray-700' }}">{{ $day['date']->format('d') }}</span>
+                            @if($day['tasks']->isNotEmpty())
+                                <span class="text-[0.65rem] text-gray-500">{{ $day['tasks']->count() }} tareas</span>
+                            @endif
+                        </div>
+                        <div class="mt-2 space-y-1">
                             @foreach($day['tasks'] as $task)
-                                <a href="{{ route('tasks.show', [$project, $task]) }}" class="block text-xs text-gray-700 hover:text-primary-600">
-                                    {{ $task->title }}
+                                @php
+                                    $status = $calendar['statuses'][$task->status] ?? null;
+                                    $pillClass = $colorMap[$status['color'] ?? 'secondary'] ?? 'bg-slate-100 text-slate-700';
+                                @endphp
+                                <a href="{{ route('tasks.show', [$project, $task]) }}" class="flex items-center gap-2 text-xs rounded-lg px-2 py-1 border border-gray-200 hover:border-primary-300 hover:text-primary-700">
+                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[0.65rem] {{ $pillClass }}">{{ $status['label'] ?? 'Tarea' }}</span>
+                                    <span class="truncate">{{ $task->title }}</span>
                                 </a>
                             @endforeach
                         </div>

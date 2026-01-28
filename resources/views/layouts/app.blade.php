@@ -17,10 +17,19 @@
         document.documentElement.dataset.theme = localStorage.getItem('theme') || 'light';
     </script>
 </head>
-<body class="font-sans antialiased" x-data="{ theme: localStorage.getItem('theme') || 'light' }"
-      x-init="document.documentElement.dataset.theme = theme; $watch('theme', value => { document.documentElement.dataset.theme = value; localStorage.setItem('theme', value); })"
-      x-on:toggle-theme.window="theme = theme === 'light' ? 'dark' : 'light'">
-    <div class="app-shell">
+<body class="font-sans antialiased"
+      x-data="{
+          theme: localStorage.getItem('theme') || 'light',
+          sidebarOpen: localStorage.getItem('sidebar') !== 'collapsed'
+      }"
+      x-init="
+          document.documentElement.dataset.theme = theme;
+          $watch('theme', value => { document.documentElement.dataset.theme = value; localStorage.setItem('theme', value); });
+          $watch('sidebarOpen', value => { localStorage.setItem('sidebar', value ? 'expanded' : 'collapsed'); });
+      "
+      x-on:toggle-theme.window="theme = theme === 'light' ? 'dark' : 'light'"
+      x-on:toggle-sidebar.window="sidebarOpen = !sidebarOpen">
+    <div class="app-shell" :class="{ 'sidebar-collapsed': !sidebarOpen }">
         <aside class="hidden lg:block app-sidebar">
             @hasSection('sidebar')
                 @yield('sidebar')

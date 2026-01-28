@@ -14,7 +14,7 @@
         </div>
         <div class="flex gap-2">
             <a href="{{ route('admin.users.create') }}" class="btn-primary">Crear usuario</a>
-            <a href="{{ route('admin.index') }}" class="btn-secondary">Volver</a>
+            <a href="{{ route('dashboard') }}" class="btn-secondary">Volver</a>
         </div>
     </div>
 @endsection
@@ -31,6 +31,13 @@
         actionUrl: '',
         singleBase: '{{ url('admin/users') }}',
         bulkUrl: '{{ route('admin.users.bulk-deactivate') }}',
+        historyOpen: false,
+        historyUserId: null,
+        historyUserName: '',
+        historyType: '',
+        historyAction: '',
+        historyHtml: '',
+        historyLoading: false,
         init() {
             this.$watch('selected', value => {
                 this.selectAll = value.length === this.pageIds.length && this.pageIds.length > 0;
@@ -52,6 +59,44 @@
         },
         closeModal() {
             this.confirmOpen = false;
+        },
+        openHistory(id, name) {
+            this.historyUserId = id;
+            this.historyUserName = name;
+            this.historyType = '';
+            this.historyAction = '';
+            this.historyOpen = true;
+            this.loadHistory();
+        },
+        closeHistory() {
+            this.historyOpen = false;
+            this.historyHtml = '';
+        },
+        historyExportUrl() {
+            if (!this.historyUserId) return '#';
+            const params = new URLSearchParams();
+            if (this.historyType) params.set('type', this.historyType);
+            if (this.historyAction) params.set('action', this.historyAction);
+            const qs = params.toString();
+            return `${this.singleBase}/${this.historyUserId}/audit/export-pdf${qs ? `?${qs}` : ''}`;
+        },
+        loadHistory() {
+            if (!this.historyUserId) return;
+            this.historyLoading = true;
+            const params = new URLSearchParams();
+            if (this.historyType) params.set('type', this.historyType);
+            if (this.historyAction) params.set('action', this.historyAction);
+            const qs = params.toString();
+            fetch(`${this.singleBase}/${this.historyUserId}/audit${qs ? `?${qs}` : ''}`, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(response => response.text())
+            .then(html => {
+                this.historyHtml = html;
+            })
+            .finally(() => {
+                this.historyLoading = false;
+            });
         }
     }"
     x-init="init()"
@@ -139,6 +184,7 @@
                                 <td class="px-4 py-3 text-sm text-gray-600">
                                     <div class="flex items-center gap-2">
                                         <a href="{{ route('admin.users.show', $user) }}" class="btn-secondary text-xs">Detalles</a>
+                                        <button type="button" class="btn-secondary text-xs" @click="openHistory({{ $user->id }}, @js($user->full_name))">Historial</button>
                                     </div>
                                 </td>
                             </tr>
@@ -156,7 +202,7 @@
     <div
         x-show="confirmOpen"
         x-cloak
-        class="fixed inset-0 z-50 flex items-center justify-center"
+        class="fixed inset-0 z-[1100] flex items-center justify-center"
         role="dialog"
         aria-modal="true"
     >
@@ -182,6 +228,83 @@
                     <button type="submit" class="btn-danger">Eliminar</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    @php
+        $typeOptions = [
+            '' => 'Todos',
+            'team' => 'Equipos',
+            'project' => 'Proyectos',
+            'sprint' => 'Sprints',
+            'task' => 'Tareas',
+            'checklist' => 'Checklist',
+            'time' => 'Tiempo manual',
+            'timer' => 'Timer',
+            'message' => 'Mensajes',
+            'auth' => 'Sesion',
+        ];
+        $actionOptions = [
+            '' => 'Todas',
+            'create' => 'Crear',
+            'update' => 'Actualizar',
+            'delete' => 'Eliminar',
+            'move' => 'Mover',
+            'assign' => 'Asignar',
+            'unassign' => 'Desasignar',
+            'start' => 'Iniciar',
+            'stop' => 'Finalizar',
+            'login' => 'Login',
+            'logout' => 'Logout',
+        ];
+    @endphp
+
+    <div
+        x-show="historyOpen"
+        x-cloak
+        class="fixed inset-0 z-[1100] flex items-center justify-center"
+        role="dialog"
+        aria-modal="true"
+    >
+        <div class="absolute inset-0 bg-gray-900/50" @click="closeHistory()"></div>
+        <div class="relative bg-white rounded-lg shadow-lg w-full max-w-5xl p-6">
+            <div class="flex items-center justify-between gap-3">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900">Historial de <span x-text="historyUserName"></span></h3>
+                    <p class="text-xs text-gray-500 mt-1">Mostrando 20 eventos mas recientes.</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <a :href="historyExportUrl()" class="btn-secondary text-xs" target="_blank">Exportar PDF</a>
+                    <button type="button" class="btn-secondary text-xs" @click="closeHistory()">Cerrar</button>
+                </div>
+            </div>
+            <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Tipo</label>
+                    <select class="form-input w-full" x-model="historyType" @change="loadHistory()">
+                        @foreach($typeOptions as $key => $label)
+                            <option value="{{ $key }}">{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Accion</label>
+                    <select class="form-input w-full" x-model="historyAction" @change="loadHistory()">
+                        @foreach($actionOptions as $key => $label)
+                            <option value="{{ $key }}">{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="flex items-end">
+                    <button type="button" class="btn-secondary w-full" @click="historyType=''; historyAction=''; loadHistory();">Limpiar filtros</button>
+                </div>
+            </div>
+            <div class="mt-4">
+                <template x-if="historyLoading">
+                    <div class="text-sm text-gray-500">Cargando historial...</div>
+                </template>
+                <div x-html="historyHtml"></div>
+            </div>
         </div>
     </div>
 </div>

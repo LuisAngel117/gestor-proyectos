@@ -24,9 +24,14 @@
 @endsection
 
 @section('content')
-<div class="max-w-2xl mx-auto">
-    <div class="card">
-        <div class="card-body">
+@php
+    $minDate = now()->toDateString();
+    $maxDate = $project->due_date ? $project->due_date->format('Y-m-d') : null;
+@endphp
+<div class="max-w-5xl mx-auto">
+    <div class="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6">
+        <div class="card">
+            <div class="card-body">
             <form method="POST" action="{{ route('sprints.store', $project) }}" class="space-y-6">
                 @csrf
 
@@ -61,37 +66,49 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label for="start_date" class="form-label">Fecha de inicio * <span class="ml-1 text-gray-400 cursor-help" title="Dia en que empieza el sprint">?</span></label>
+                        <label for="start_date" class="form-label">Fecha de inicio * <span class="ml-1 text-gray-400 cursor-help" title="Día en que empieza el sprint">?</span></label>
                         <input
                             type="date"
                             id="start_date"
                             name="start_date"
                             value="{{ old('start_date') }}"
+                            min="{{ $minDate }}"
+                            @if($maxDate) max="{{ $maxDate }}" @endif
                             class="form-input w-full @error('start_date') border-red-500 @enderror"
                             required
                         >
                         @error('start_date')
                             <p class="form-error">{{ $message }}</p>
                         @enderror
+                        <p class="text-xs text-gray-500 mt-1">No disponible antes de hoy.</p>
+                        @if($maxDate)
+                            <p class="text-xs text-gray-500">No disponible después de {{ $project->due_date->format('d/m/Y') }}.</p>
+                        @endif
                     </div>
                     <div>
-                        <label for="end_date" class="form-label">Fecha de fin * <span class="ml-1 text-gray-400 cursor-help" title="Dia en que termina el sprint">?</span></label>
+                        <label for="end_date" class="form-label">Fecha de fin * <span class="ml-1 text-gray-400 cursor-help" title="Día en que termina el sprint">?</span></label>
                         <input
                             type="date"
                             id="end_date"
                             name="end_date"
                             value="{{ old('end_date') }}"
+                            min="{{ $minDate }}"
+                            @if($maxDate) max="{{ $maxDate }}" @endif
                             class="form-input w-full @error('end_date') border-red-500 @enderror"
                             required
                         >
                         @error('end_date')
                             <p class="form-error">{{ $message }}</p>
                         @enderror
+                        <p class="text-xs text-gray-500 mt-1">No disponible antes de hoy.</p>
+                        @if($maxDate)
+                            <p class="text-xs text-gray-500">No disponible después de {{ $project->due_date->format('d/m/Y') }}.</p>
+                        @endif
                     </div>
                 </div>
 
                 <div>
-                    <label for="status" class="form-label">Estado * <span class="ml-1 text-gray-400 cursor-help" title="Usa Planificacion para asignar backlog antes de iniciar">?</span></label>
+                    <label for="status" class="form-label">Estado * <span class="ml-1 text-gray-400 cursor-help" title="Usa Planificación para definir el trabajo antes de iniciar">?</span></label>
                     <select
                         id="status"
                         name="status"
@@ -109,7 +126,7 @@
 
                 <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
                     <p class="text-sm text-blue-700">
-                        Recomendación: inicia en “Planificación” y luego usa la vista de planificación para asignar backlog.
+                        Recomendación: inicia en “Planificación” y luego usa la vista de planificación para definir el trabajo del sprint.
                     </p>
                 </div>
 
@@ -118,6 +135,27 @@
                     <button type="submit" class="btn-primary">Crear Sprint</button>
                 </div>
             </form>
+            </div>
+        </div>
+        <div class="space-y-4">
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="text-sm font-semibold text-gray-900 mb-2">Guía rápida</h3>
+                    <ol class="text-sm text-gray-600 space-y-1 list-decimal list-inside">
+                        <li>Define nombre y objetivo.</li>
+                        <li>Selecciona fechas válidas.</li>
+                        <li>Deja el estado en planificación.</li>
+                    </ol>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="text-sm font-semibold text-gray-900 mb-2">Sugerencia</h3>
+                    <p class="text-sm text-gray-600">
+                        Crea el sprint en estado planificación y luego asigna ítems desde la vista de planificación.
+                    </p>
+                </div>
+            </div>
         </div>
     </div>
 </div>

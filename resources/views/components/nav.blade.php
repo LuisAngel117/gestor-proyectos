@@ -34,6 +34,12 @@
                             ->count();
                     }
                 @endphp
+                <button type="button" class="hidden lg:inline-flex app-topbar-link"
+                        @click="$dispatch('toggle-sidebar')" aria-label="Mostrar u ocultar menu">
+                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
                 <button type="button" class="app-topbar-link"
                         @click="$dispatch('toggle-theme')" aria-label="Cambiar tema">
                     <svg class="theme-icon-light h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -43,16 +49,90 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z" />
                     </svg>
                 </button>
-                <a href="{{ route('notifications.index') }}" class="app-topbar-link">
-                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.4-1.4A2 2 0 0118 14.17V11a6 6 0 10-12 0v3.17a2 2 0 01-.6 1.43L4 17h5m6 0a3 3 0 11-6 0h6z" />
-                    </svg>
-                    @if($unreadCount > 0)
-                        <span class="absolute -top-1 -right-1 inline-flex items-center justify-center h-4 min-w-[1rem] px-1 text-[10px] font-semibold text-white bg-red-600 rounded-full">
-                            {{ $unreadCount }}
-                        </span>
-                    @endif
-                </a>
+                @php
+                    $recentNotifications = $navUser
+                        ? $navUser->notifications()->latest()->take(3)->get()
+                        : collect();
+                @endphp
+                <div class="relative" x-data="{ openNotifications: false, unreadCount: {{ $unreadCount }} }" @click.outside="openNotifications = false">
+                    <button type="button" class="app-topbar-link"
+                            @click="openNotifications = !openNotifications" aria-label="Ver notificaciones">
+                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.4-1.4A2 2 0 0118 14.17V11a6 6 0 10-12 0v3.17a2 2 0 01-.6 1.43L4 17h5m6 0a3 3 0 11-6 0h6z" />
+                        </svg>
+                        <template x-if="unreadCount > 0">
+                            <span class="absolute -top-1 -right-1 inline-flex items-center justify-center h-4 min-w-[1rem] px-1 text-[10px] font-semibold text-white bg-red-600 rounded-full">
+                            <span x-text="unreadCount"></span>
+                            </span>
+                        </template>
+                    </button>
+                    <div x-show="openNotifications" x-cloak x-transition
+                         class="absolute right-0 mt-3 w-[22rem] max-w-[90vw] rounded-2xl border border-gray-200 bg-white shadow-lg z-50">
+                        <div class="p-4 border-b border-gray-100">
+                            <div class="flex items-center justify-between">
+                                <h4 class="text-sm font-semibold text-gray-900">Notificaciones</h4>
+                                <span class="text-xs text-gray-500"><span x-text="unreadCount"></span> sin leer</span>
+                            </div>
+                        </div>
+                        <div class="max-h-80 overflow-y-auto">
+                            @if($recentNotifications->isEmpty())
+                                <div class="px-4 py-6 text-sm text-gray-500 text-center">
+                                    No tienes notificaciones recientes.
+                                </div>
+                            @else
+                                @foreach($recentNotifications as $notification)
+                                    @php
+                                        $data = $notification->data ?? [];
+                                        $projectId = $data['project_id'] ?? null;
+                                        $taskId = $data['task_id'] ?? null;
+                                        $notificationUrl = ($projectId && $taskId)
+                                            ? route('tasks.show', [$projectId, $taskId])
+                                            : route('notifications.index');
+                                        $title = $data['title'] ?? $data['message'] ?? $data['event'] ?? 'Nueva notificacion';
+                                        $body = $data['body'] ?? $data['description'] ?? null;
+                                    @endphp
+                                    <div x-data="{ read: {{ $notification->read_at ? 'true' : 'false' }} }">
+                                        <button type="button"
+                                                class="w-full text-left px-4 py-3 hover:bg-gray-50 transition"
+                                                @click="
+                                                    if (!read) {
+                                                        fetch('{{ route('notifications.read', $notification->id) }}', {
+                                                            method: 'PATCH',
+                                                            headers: {
+                                                                'Accept': 'application/json',
+                                                                'Content-Type': 'application/json',
+                                                                'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').getAttribute('content')
+                                                            },
+                                                            body: JSON.stringify({})
+                                                        }).then(() => {
+                                                            read = true;
+                                                            unreadCount = Math.max(0, unreadCount - 1);
+                                                            window.location = '{{ $notificationUrl }}';
+                                                        });
+                                                    } else {
+                                                        window.location = '{{ $notificationUrl }}';
+                                                    }
+                                                ">
+                                            <div class="flex items-start gap-3">
+                                                <span class="mt-1 h-2 w-2 rounded-full" :class="read ? 'bg-gray-300' : 'bg-primary-500'"></span>
+                                                <div class="flex-1">
+                                                    <p class="text-sm font-medium text-gray-900">{{ \Illuminate\Support\Str::limit($title, 60) }}</p>
+                                                    @if($body)
+                                                        <p class="text-xs text-gray-500 mt-1">{{ \Illuminate\Support\Str::limit($body, 70) }}</p>
+                                                    @endif
+                                                    <p class="text-xs text-gray-400 mt-1">{{ $notification->created_at->format('d/m/Y H:i') }}</p>
+                                                </div>
+                                            </div>
+                                        </button>
+                                    </div>
+                                @endforeach
+                            @endif
+                        </div>
+                        <div class="p-3 border-t border-gray-100">
+                            <a href="{{ route('notifications.index') }}" class="btn-secondary text-xs w-full justify-center">Ver todo</a>
+                        </div>
+                    </div>
+                </div>
                 <a href="{{ route('messages.index') }}" class="app-topbar-link">
                     <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h6m-9 8l3.5-3H20a2 2 0 002-2V7a2 2 0 00-2-2H4a2 2 0 00-2 2v9a2 2 0 002 2h1v3z" />
@@ -128,11 +208,6 @@
             <x-responsive-nav-link :href="route('messages.index')" :active="request()->routeIs('messages.*')">
                 {{ __('Mensajes') }}
             </x-responsive-nav-link>
-            @if(Auth::user()->isSuperadmin())
-                <x-responsive-nav-link :href="route('admin.index')" :active="request()->routeIs('admin.*')">
-                    {{ __('Admin') }}
-                </x-responsive-nav-link>
-            @endif
         </div>
 
         <!-- Responsive Settings Options -->

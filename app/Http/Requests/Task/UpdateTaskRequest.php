@@ -3,9 +3,11 @@
 namespace App\Http\Requests\Task;
 
 use App\Models\BacklogItem;
+use App\Models\Project;
 use App\Models\Sprint;
 use App\Models\Task;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
@@ -74,6 +76,20 @@ class UpdateTaskRequest extends FormRequest
             if ($task instanceof Task && $this->filled('parent_id')) {
                 if ((int) $task->id === (int) $this->input('parent_id')) {
                     $validator->errors()->add('parent_id', 'La tarea no puede ser su propia tarea padre.');
+                }
+            }
+
+            if ($this->filled('due_date')) {
+                $project = Project::query()->find($projectId);
+                if ($project && $project->due_date) {
+                    $taskDue = Carbon::parse($this->input('due_date'))->startOfDay();
+                    $projectDue = Carbon::parse($project->due_date)->startOfDay();
+                    if ($taskDue->gt($projectDue)) {
+                        $validator->errors()->add(
+                            'due_date',
+                            'La fecha límite de la tarea no puede ser posterior a la fecha límite del proyecto (' . $projectDue->format('d/m/Y') . ').'
+                        );
+                    }
                 }
             }
         });

@@ -1,10 +1,20 @@
 ﻿@extends('layouts.app')
 
 @section('header')
-<div class="flex justify-between items-center">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Crear Nuevo Proyecto') }}
-        </h2>
+<div class="flex flex-wrap items-center justify-between gap-4">
+        <div>
+            <nav class="text-xs text-gray-500 mb-2">
+                <a href="{{ route('dashboard') }}" class="hover:text-primary-600">Inicio</a>
+                <span class="mx-1">/</span>
+                <a href="{{ route('projects.index') }}" class="hover:text-primary-600">Proyectos</a>
+                <span class="mx-1">/</span>
+                <span>Crear</span>
+            </nav>
+            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+                {{ __('Crear Nuevo Proyecto') }}
+            </h2>
+            <p class="text-sm text-gray-600 mt-1">Define el alcance y fechas antes de agregar miembros y tareas.</p>
+        </div>
         <a href="{{ route('projects.index') }}" class="btn-secondary">
             <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
@@ -18,9 +28,10 @@
 @section('content')
 
 
-<div class="max-w-3xl mx-auto">
-    <div class="card">
-        <div class="card-body">
+<div class="max-w-5xl mx-auto">
+    <div class="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6">
+        <div class="card">
+            <div class="card-body">
             <form method="POST" action="{{ route('projects.store') }}">
                 @csrf
 
@@ -99,22 +110,18 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     <div>
                         <label for="status" class="form-label">Estado *</label>
-                        <select
+                        <input type="hidden" name="status" value="planificacion">
+                        <input
+                            type="text"
                             id="status"
-                            name="status"
-                            class="form-input w-full @error('status') border-red-500 @enderror"
-                            required
+                            class="form-input w-full bg-gray-100"
+                            value="Planificación"
+                            disabled
                         >
-                            <option value="planificacion" {{ old('status', 'planificacion') == 'planificacion' ? 'selected' : '' }}>Planificación</option>
-                            <option value="en_progreso" {{ old('status') == 'en_progreso' ? 'selected' : '' }}>En Progreso</option>
-                            <option value="en_espera" {{ old('status') == 'en_espera' ? 'selected' : '' }}>En Espera</option>
-                            <option value="completado" {{ old('status') == 'completado' ? 'selected' : '' }}>Completado</option>
-                            <option value="cancelado" {{ old('status') == 'cancelado' ? 'selected' : '' }}>Cancelado</option>
-                            <option value="archivado" {{ old('status') == 'archivado' ? 'selected' : '' }}>Archivado</option>
-                        </select>
                         @error('status')
                             <p class="form-error">{{ $message }}</p>
                         @enderror
+                        <p class="text-xs text-gray-500 mt-1">Estado inicial fijo al crear.</p>
                     </div>
 
                     <div>
@@ -145,11 +152,13 @@
                             id="start_date"
                             name="start_date"
                             value="{{ old('start_date') }}"
+                            min="{{ now()->toDateString() }}"
                             class="form-input w-full @error('start_date') border-red-500 @enderror"
                         >
                         @error('start_date')
                             <p class="form-error">{{ $message }}</p>
                         @enderror
+                        <p class="text-xs text-gray-500 mt-1">No disponible antes de hoy.</p>
                     </div>
 
                     <div>
@@ -159,11 +168,13 @@
                             id="due_date"
                             name="due_date"
                             value="{{ old('due_date') }}"
+                            min="{{ now()->toDateString() }}"
                             class="form-input w-full @error('due_date') border-red-500 @enderror"
                         >
                         @error('due_date')
                             <p class="form-error">{{ $message }}</p>
                         @enderror
+                        <p class="text-xs text-gray-500 mt-1">No disponible antes de hoy.</p>
                     </div>
                 </div>
 
@@ -187,27 +198,6 @@
                     <p class="text-xs text-gray-500 mt-1">Total de horas estimadas para completar el proyecto</p>
                 </div>
 
-                <!-- Nota informativa -->
-                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                    <div class="flex">
-                        <div class="flex-shrink-0">
-                            <svg class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
-                            </svg>
-                        </div>
-                        <div class="ml-3">
-                            <h3 class="text-sm font-medium text-blue-800">Nota importante</h3>
-                            <div class="mt-2 text-sm text-blue-700">
-                                <ul class="list-disc list-inside space-y-1">
-                                    <li>Serás el propietario (owner) del proyecto</li>
-                                    <li>Podrás agregar miembros del equipo al proyecto</li>
-                                    <li>Podrás gestionar sprints y tareas</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Botones de acción -->
                 <div class="flex justify-end space-x-4">
                     <a href="{{ route('projects.index') }}" class="btn-secondary">
@@ -221,6 +211,29 @@
                     </button>
                 </div>
             </form>
+            </div>
+        </div>
+        <div class="space-y-4">
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="text-sm font-semibold text-gray-900 mb-2">Gu&iacute;a r&aacute;pida</h3>
+                    <ol class="text-sm text-gray-600 space-y-1 list-decimal list-inside">
+                        <li>Selecciona el equipo destino.</li>
+                        <li>Define nombre y prioridad.</li>
+                        <li>Agrega fechas y horas estimadas.</li>
+                    </ol>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="text-sm font-semibold text-gray-900 mb-2">Lo que obtienes</h3>
+                    <ul class="text-sm text-gray-600 space-y-1">
+                        <li>Ser&aacute;s el propietario (Owner).</li>
+                        <li>Podr&aacute;s agregar miembros del equipo.</li>
+                        <li>Podr&aacute;s gestionar sprints y tareas.</li>
+                    </ul>
+                </div>
+            </div>
         </div>
     </div>
 </div>

@@ -5,6 +5,10 @@
 /* Estilos personalizados del proyecto */
 
 @layer base {
+    [x-cloak] {
+        display: none !important;
+    }
+
     :root {
         --app-bg: #f4f7fa;
         --app-surface: #ffffff;
@@ -109,6 +113,18 @@
         background-color: #dc2626;
         border: 1px solid transparent;
         color: #ffffff;
+    }
+
+    .btn-success {
+        @apply inline-flex items-center px-4 py-2 rounded-lg font-semibold text-xs uppercase tracking-widest transition ease-in-out duration-150;
+        background-color: #16a34a;
+        border: 1px solid transparent;
+        color: #ffffff;
+    }
+
+    .btn-success:hover,
+    .btn-danger:hover {
+        filter: brightness(0.95);
     }
 
     /* Cards */
@@ -308,6 +324,24 @@
         transition: all 0.2s ease-in-out;
     }
 
+    .dashboard-hero {
+        background: linear-gradient(135deg, rgba(224, 242, 254, 0.9), rgba(255, 255, 255, 0.95), rgba(219, 234, 254, 0.9));
+    }
+
+    .dashboard-hero-card {
+        background-color: rgba(255, 255, 255, 0.85);
+    }
+
+    [data-theme="dark"] .dashboard-hero {
+        background: linear-gradient(135deg, rgba(30, 41, 59, 0.85), rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95));
+        border-color: var(--app-border);
+    }
+
+    [data-theme="dark"] .dashboard-hero-card {
+        background-color: rgba(43, 44, 47, 0.85);
+        border-color: var(--app-border);
+    }
+
     [data-theme="dark"] .app-topbar-user {
         background-color: rgba(43, 44, 47, 0.9);
         border-color: rgba(255, 255, 255, 0.08);
@@ -329,6 +363,7 @@
         background-color: var(--app-sidebar-bg);
         color: var(--app-sidebar-text);
         box-shadow: var(--app-sidebar-shadow);
+        transition: transform 0.2s ease-in-out;
     }
 
     .app-sidebar-title {
@@ -376,5 +411,19 @@
 
     [data-theme="dark"] .theme-icon-dark {
         display: inline-flex;
+    }
+
+    @media (min-width: 1024px) {
+        .sidebar-collapsed .app-sidebar {
+            transform: translateX(-100%);
+        }
+
+        .sidebar-collapsed .app-content {
+            margin-left: 0;
+        }
+
+        .sidebar-collapsed .app-topbar {
+            left: 0;
+        }
     }
 }

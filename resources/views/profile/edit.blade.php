@@ -144,6 +144,11 @@
                             value="{{ old('telefono', $telefonoLocal ?? '') }}"
                             class="form-input w-full @error('telefono') border-red-500 @enderror"
                             placeholder="Ej: 0968840065"
+                            maxlength="10"
+                            inputmode="numeric"
+                            pattern="[0-9]*"
+                            autocomplete="tel"
+                            oninput="this.value = this.value.replace(/\\D/g, '').slice(0, 10)"
                         >
                         @error('telefono')
                             <p class="form-error">{{ $message }}</p>

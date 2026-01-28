@@ -1,10 +1,22 @@
 ﻿@extends('layouts.app')
 
 @section('header')
-<div class="flex justify-between items-center">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Editar Proyecto') }}
-        </h2>
+<div class="flex flex-wrap items-center justify-between gap-4">
+        <div>
+            <nav class="text-xs text-gray-500 mb-2">
+                <a href="{{ route('dashboard') }}" class="hover:text-primary-600">Inicio</a>
+                <span class="mx-1">/</span>
+                <a href="{{ route('projects.index') }}" class="hover:text-primary-600">Proyectos</a>
+                <span class="mx-1">/</span>
+                <a href="{{ route('projects.show', $project) }}" class="hover:text-primary-600">{{ $project->name }}</a>
+                <span class="mx-1">/</span>
+                <span>Editar</span>
+            </nav>
+            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+                {{ __('Editar Proyecto') }}
+            </h2>
+            <p class="text-sm text-gray-600 mt-1">Actualiza los datos b&aacute;sicos del proyecto.</p>
+        </div>
         <a href="{{ route('projects.show', $project) }}" class="btn-secondary">
             <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
@@ -18,9 +30,10 @@
 @section('content')
 
 
-<div class="max-w-3xl mx-auto">
-    <div class="card">
-        <div class="card-body">
+<div class="max-w-5xl mx-auto">
+    <div class="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6">
+        <div class="card">
+            <div class="card-body">
             <form method="POST" action="{{ route('projects.update', $project) }}">
                 @csrf
                 @method('PUT')
@@ -133,11 +146,13 @@
                             id="start_date"
                             name="start_date"
                             value="{{ old('start_date', $project->start_date?->format('Y-m-d')) }}"
+                            min="{{ now()->toDateString() }}"
                             class="form-input w-full @error('start_date') border-red-500 @enderror"
                         >
                         @error('start_date')
                             <p class="form-error">{{ $message }}</p>
                         @enderror
+                        <p class="text-xs text-gray-500 mt-1">No disponible antes de hoy.</p>
                     </div>
 
                     <div>
@@ -147,11 +162,13 @@
                             id="due_date"
                             name="due_date"
                             value="{{ old('due_date', $project->due_date?->format('Y-m-d')) }}"
+                            min="{{ now()->toDateString() }}"
                             class="form-input w-full @error('due_date') border-red-500 @enderror"
                         >
                         @error('due_date')
                             <p class="form-error">{{ $message }}</p>
                         @enderror
+                        <p class="text-xs text-gray-500 mt-1">No disponible antes de hoy.</p>
                     </div>
                 </div>
 
@@ -186,6 +203,29 @@
                     </button>
                 </div>
             </form>
+            </div>
+        </div>
+        <div class="space-y-4">
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="text-sm font-semibold text-gray-900 mb-2">Estado actual</h3>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="badge badge-{{ $project->status_color }}">{{ $project->status_label }}</span>
+                        <span class="badge badge-{{ $project->priority_color }}">{{ $project->priority_label }}</span>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-3">Actualiza estado y prioridad seg&uacute;n el avance real.</p>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="text-sm font-semibold text-gray-900 mb-2">Consejos r&aacute;pidos</h3>
+                    <ul class="text-sm text-gray-600 space-y-1">
+                        <li>Verifica fechas de inicio y entrega.</li>
+                        <li>Mant&eacute;n una descripci&oacute;n clara.</li>
+                        <li>Los miembros se gestionan en el detalle del proyecto.</li>
+                    </ul>
+                </div>
+            </div>
         </div>
     </div>
 </div>

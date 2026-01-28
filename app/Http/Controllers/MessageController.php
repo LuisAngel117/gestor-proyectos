@@ -6,6 +6,7 @@ use App\Http\Requests\Messages\StoreMessageRequest;
 use App\Models\Message;
 use App\Models\MessageRead;
 use App\Models\User;
+use App\Support\AuditLogger;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -59,6 +60,11 @@ class MessageController extends Controller
         }
 
         $message = Message::create($attributes);
+        AuditLogger::log($user, 'message.send', $message, [
+            'scope_type' => $data['scope_type'],
+            'scope_id' => $data['scope_id'],
+            'recipient_id' => $data['recipient_id'] ?? null,
+        ]);
 
         if ($request->wantsJson()) {
             return response()->json([

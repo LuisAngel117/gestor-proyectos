@@ -108,6 +108,11 @@ class NotificationController extends Controller
             ]);
         }
 
+        $redirect = $request->input('redirect');
+        if ($redirect && str_starts_with($redirect, url('/'))) {
+            return redirect()->to($redirect);
+        }
+
         return back()->with('success', 'Notificacion marcada como leida.');
     }
 

@@ -1,8 +1,11 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\AdminCalendarController;
+use App\Http\Controllers\Admin\AdminScrumBoardController;
+use App\Http\Controllers\Admin\AdminTaskController;
 use App\Http\Controllers\Admin\AdminUserController;
+use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\Auth\FirstLoginController;
@@ -56,10 +59,10 @@ Route::get('/dashboard', function () {
 
     return view('dashboard', [
         'isSuperadmin' => $isSuperadmin,
-        'usersCount' => $isSuperadmin ? User::count() : null,
+        'usersCount' => $isSuperadmin ? User::where('estado', 'activo')->count() : null,
         'teamsCount' => $teamsQuery->count(),
         'projectsCount' => $projectsQuery->count(),
-        'recentUsers' => $isSuperadmin ? User::orderByDesc('created_at')->take(5)->get() : collect(),
+        'recentUsers' => $isSuperadmin ? User::where('estado', 'activo')->orderByDesc('created_at')->take(5)->get() : collect(),
         'recentTeams' => $teamsQuery->with('owner')->orderByDesc('created_at')->take(5)->get(),
         'recentProjects' => $projectsQuery->with('team')->orderByDesc('created_at')->take(5)->get(),
     ]);
@@ -104,11 +107,16 @@ Route::middleware('auth')->group(function () {
 
     // Admin (superadmin)
         Route::prefix('admin')->name('admin.')->group(function () {
-        Route::get('/', [AdminDashboardController::class, 'index'])->name('index');
+        Route::get('/calendar', [AdminCalendarController::class, 'index'])->name('calendar');
+        Route::get('/scrum', [AdminScrumBoardController::class, 'index'])->name('scrum');
+        Route::get('/tasks', [AdminTaskController::class, 'index'])->name('tasks');
         Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
         Route::get('/users/create', [AdminUserController::class, 'create'])->name('users.create');
         Route::get('/users/{user}', [AdminUserController::class, 'show'])->name('users.show');
         Route::get('/users/{user}/edit', [AdminUserController::class, 'edit'])->name('users.edit');
+        Route::get('/users/{user}/audit', [AdminUserController::class, 'audit'])->name('users.audit');
+        Route::get('/users/{user}/audit/export-pdf', [AdminUserController::class, 'exportAuditPdf'])->name('users.audit.export-pdf');
+        Route::post('/users/{user}/reset-password', [AdminUserController::class, 'resetPassword'])->name('users.reset-password');
         Route::post('/users', [AdminUserController::class, 'store'])->name('users.store');
         Route::post('/users/bulk-deactivate', [AdminUserController::class, 'bulkDeactivate'])->name('users.bulk-deactivate');
         Route::post('/users/export-pdf', [AdminUserController::class, 'exportPdf'])->name('users.export-pdf');
@@ -129,6 +137,7 @@ Route::middleware('auth')->group(function () {
 
     // Rutas de proyectos
         Route::middleware('team.context')->group(function () {
+        Route::get('my-tasks', [TaskController::class, 'myTasks'])->name('tasks.my');
         Route::resource('projects', \App\Http\Controllers\ProjectController::class);
         Route::patch('projects/{project}/owner', [\App\Http\Controllers\ProjectController::class, 'transferOwner'])
             ->name('projects.transfer-owner');
@@ -173,20 +182,6 @@ Route::middleware('auth')->group(function () {
             Route::post('projects/{project}/sprints/{sprint}/close', [SprintStateController::class, 'close'])
                 ->name('sprints.close');
 
-            Route::get('projects/{project}/backlog', [BacklogItemController::class, 'index'])
-                ->name('backlog.index');
-            Route::get('projects/{project}/backlog/create', [BacklogItemController::class, 'create'])
-                ->name('backlog.create');
-            Route::post('projects/{project}/backlog', [BacklogItemController::class, 'store'])
-                ->name('backlog.store');
-            Route::get('projects/{project}/backlog/{backlogItem}/edit', [BacklogItemController::class, 'edit'])
-                ->name('backlog.edit');
-            Route::put('projects/{project}/backlog/{backlogItem}', [BacklogItemController::class, 'update'])
-                ->name('backlog.update');
-            Route::delete('projects/{project}/backlog/{backlogItem}', [BacklogItemController::class, 'destroy'])
-                ->name('backlog.destroy');
-            Route::post('projects/{project}/backlog/reorder', [BacklogItemController::class, 'reorder'])
-                ->name('backlog.reorder');
 
             Route::get('projects/{project}/tasks', [TaskController::class, 'index'])
                 ->name('tasks.index');

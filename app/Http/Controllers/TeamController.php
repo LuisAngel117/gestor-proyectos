@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Team;
 use App\Models\User;
 use App\Support\Context\TeamContext;
+use App\Support\AuditLogger;
 use App\Support\Visibility\ProjectVisibility;
 use App\Support\Visibility\TeamVisibility;
 use Illuminate\Http\Request;
@@ -89,6 +90,9 @@ class TeamController extends Controller
 
         // Agregar al creador como owner del equipo
         $team->addMember($user, 'owner');
+        AuditLogger::log($user, 'team.create', $team, [
+            'name' => $team->name,
+        ]);
 
         return redirect()
             ->to(route('teams.show', $team) . '#team-add-member')
@@ -153,6 +157,9 @@ class TeamController extends Controller
         ]);
 
         $team->update($validated);
+        AuditLogger::log($user, 'team.update', $team, [
+            'name' => $team->name,
+        ]);
 
         return redirect()->route('teams.show', $team)
             ->with('success', 'Equipo actualizado exitosamente');
@@ -172,6 +179,9 @@ class TeamController extends Controller
 
         $teamName = $team->name;
         $team->delete();
+        AuditLogger::log($user, 'team.delete', $team, [
+            'name' => $teamName,
+        ]);
 
         return redirect()->route('teams.index')
             ->with('success', "Equipo '{$teamName}' eliminado exitosamente");

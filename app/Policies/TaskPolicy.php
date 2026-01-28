@@ -45,24 +45,27 @@ class TaskPolicy
         return in_array($teamRole, ['owner', 'admin', 'observer'], true);
     }
 
-    public function create(User $user, Project $project): bool
+    public function create(User $user, Project $project, ?string $dueDate = null): bool
     {
-        return $this->canManageTask($user, $project, ['owner', 'admin']);
+        if (!$this->canManageTask($user, $project, ['owner', 'admin'])) {
+            return false;
+        }
+
+        return $this->dueDateWithinProject($project, $dueDate);
     }
 
-    public function update(User $user, Task $task): bool
+    public function update(User $user, Task $task, ?string $dueDate = null): bool
     {
-        return $this->canManageTask($user, $task->project, ['owner', 'admin']);
+        if (!$this->canManageTask($user, $task->project, ['owner', 'admin'])) {
+            return false;
+        }
+
+        return $this->dueDateWithinProject($task->project, $dueDate);
     }
 
     public function updateStatus(User $user, Task $task): bool
     {
-        if ($this->canManageTask($user, $task->project, ['owner', 'admin'])) {
-            return true;
-        }
-
-        $projectRole = $user->roleInProject($task->project_id);
-        return $projectRole === 'member' && $this->isAssigned($user, $task);
+        return $this->canManageTask($user, $task->project, ['owner', 'admin']);
     }
 
     public function delete(User $user, Task $task): bool
@@ -87,6 +90,10 @@ class TaskPolicy
 
     public function trackTime(User $user, Task $task): bool
     {
+        if ($task->status === 'hecho') {
+            return false;
+        }
+
         if ($this->canManageTask($user, $task->project, ['owner', 'admin'])) {
             return true;
         }
@@ -115,5 +122,21 @@ class TaskPolicy
         return $task->assignees()
             ->where('users.id', $user->id)
             ->exists();
+    }
+
+    private function dueDateWithinProject(Project $project, ?string $dueDate): bool
+    {
+        if (!$dueDate || !$project->due_date) {
+            return true;
+        }
+
+        try {
+            $taskDate = \Illuminate\Support\Carbon::parse($dueDate)->startOfDay();
+            $projectDate = \Illuminate\Support\Carbon::parse($project->due_date)->startOfDay();
+        } catch (\Throwable $e) {
+            return false;
+        }
+
+        return $taskDate->lte($projectDate);
     }
 }

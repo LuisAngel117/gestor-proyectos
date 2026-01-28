@@ -6,6 +6,7 @@ use App\Http\Requests\ProjectMemberStoreRequest;
 use App\Http\Requests\ProjectMemberUpdateRequest;
 use App\Models\Project;
 use App\Models\User;
+use App\Support\AuditLogger;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 
@@ -31,6 +32,10 @@ class ProjectMemberController extends Controller
         $user = User::findOrFail($data['user_id']);
 
         $project->addMember($user, $role);
+        AuditLogger::log($request->user(), 'project.member.add', $project, [
+            'member_id' => $user->id,
+            'role' => $role,
+        ]);
 
         return redirect()
             ->to(route('projects.show', $project) . '#project-assistant')
@@ -43,6 +48,10 @@ class ProjectMemberController extends Controller
 
         $data = $request->validated();
         $project->updateMemberRole($user, $data['role']);
+        AuditLogger::log($request->user(), 'project.member.role', $project, [
+            'member_id' => $user->id,
+            'role' => $data['role'],
+        ]);
 
         return redirect()
             ->route('projects.show', $project)
@@ -67,6 +76,9 @@ class ProjectMemberController extends Controller
         }
 
         $project->removeMember($user);
+        AuditLogger::log(request()->user(), 'project.member.remove', $project, [
+            'member_id' => $user->id,
+        ]);
 
         return redirect()
             ->route('projects.show', $project)

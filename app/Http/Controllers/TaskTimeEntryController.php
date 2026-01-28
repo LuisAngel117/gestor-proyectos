@@ -11,6 +11,7 @@ use App\Models\TaskTimeEntry;
 use App\Models\User;
 use App\Notifications\TaskTimeLoggedNotification;
 use App\Services\TimeTracking\TimeEntryValidationService;
+use App\Support\AuditLogger;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -60,6 +61,9 @@ class TaskTimeEntryController extends Controller
             'note' => $data['note'] ?? null,
             'created_by' => $request->user()->id,
         ]);
+        AuditLogger::log($request->user(), 'time.manual.create', $task, [
+            'entry_id' => $entry->id,
+        ]);
 
         $this->notifyTaskCreator($task, $entry, $request->user()->id);
 
@@ -98,6 +102,9 @@ class TaskTimeEntryController extends Controller
             'duration_seconds' => $duration,
             'note' => $data['note'] ?? $timeEntry->note,
         ]);
+        AuditLogger::log($request->user(), 'time.manual.update', $task, [
+            'entry_id' => $timeEntry->id,
+        ]);
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -121,6 +128,9 @@ class TaskTimeEntryController extends Controller
         $this->ensureEntryOwnership($request->user(), $task, $timeEntry->user_id, $timeEntry);
 
         $timeEntry->delete();
+        AuditLogger::log($request->user(), 'time.manual.delete', $task, [
+            'entry_id' => $timeEntry->id,
+        ]);
 
         if ($request->expectsJson()) {
             return response()->json([

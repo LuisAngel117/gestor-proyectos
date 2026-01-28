@@ -9,8 +9,10 @@ use App\Models\Task;
 use App\Models\TaskTimeEntry;
 use App\Models\User;
 use App\Notifications\TaskTimeLoggedNotification;
+use App\Notifications\TaskTimerStartedNotification;
 use App\Services\Tracking\TaskStatusTrackingService;
 use App\Services\TimeTracking\TaskTimerService;
+use App\Support\AuditLogger;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
@@ -64,6 +66,10 @@ class TaskTimerController extends Controller
         if ($task->status !== 'hecho' && $task->status !== 'en_progreso') {
             $this->trackingService->recordTransition($task, 'en_progreso', $request->user());
         }
+        AuditLogger::log($request->user(), 'timer.start', $task, [
+            'project_id' => $project->id,
+        ]);
+        $this->notifyTimerStarted($task, $request->user()->id);
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -99,6 +105,9 @@ class TaskTimerController extends Controller
         }
 
         $this->notifyTaskCreator($task, $entry, $request->user()->id);
+        AuditLogger::log($request->user(), 'timer.stop', $task, [
+            'project_id' => $project->id,
+        ]);
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -131,6 +140,41 @@ class TaskTimerController extends Controller
 
         DB::afterCommit(function () use ($creator, $task, $entry, $actorId) {
             $creator->notify(new TaskTimeLoggedNotification($task, $entry, $actorId));
+        });
+    }
+
+    private function notifyTimerStarted(Task $task, int $actorId): void
+    {
+        $project = $task->project;
+        if (!$project) {
+            return;
+        }
+
+        $recipients = collect();
+
+        $teamOwner = $project->team?->owner;
+        if ($teamOwner) {
+            $recipients->push($teamOwner);
+        }
+
+        $projectOwner = $project->owner();
+        if ($projectOwner) {
+            $recipients->push($projectOwner);
+        }
+
+        $recipients = $recipients
+            ->filter()
+            ->unique('id')
+            ->reject(fn ($user) => (int) $user->id === (int) $actorId);
+
+        if ($recipients->isEmpty()) {
+            return;
+        }
+
+        DB::afterCommit(function () use ($recipients, $task, $actorId) {
+            $recipients->each(function (User $user) use ($task, $actorId) {
+                $user->notify(new TaskTimerStartedNotification($task, $actorId));
+            });
         });
     }
 }

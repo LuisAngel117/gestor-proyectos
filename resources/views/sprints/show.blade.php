@@ -20,13 +20,11 @@
             <p class="text-sm text-gray-600 mt-1">{{ $project->name }}</p>
         </div>
         <div class="flex flex-wrap gap-2">
-            @can('plan', $sprint)
-                @if($sprint->isPlanning())
-                    <a href="{{ route('sprints.plan', [$project, $sprint]) }}" class="btn-primary">
-                        Planificar
-                    </a>
-                @endif
-            @endcan
+            @if($sprint->isPlanning())
+                <a href="{{ route('tasks.index', $project) }}?sprint={{ $sprint->id }}#create-task" class="btn-primary">
+                    Crear tareas
+                </a>
+            @endif
             <a href="{{ route('sprints.index', $project) }}" class="btn-secondary">Volver</a>
         </div>
     </div>
@@ -40,9 +38,21 @@
     <div class="lg:col-span-2">
         <div class="card">
             <div class="card-body space-y-4">
-                <div class="flex items-center justify-between">
-                    <span class="badge badge-secondary">{{ ucfirst($sprint->status) }}</span>
-                    <span class="text-xs text-gray-500">Secuencia #{{ $sprint->sequence }}</span>
+                @php
+                    $statusBadge = match ($sprint->status) {
+                        'activo' => 'success',
+                        'cerrado' => 'danger',
+                        default => 'warning',
+                    };
+                @endphp
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div class="flex items-center gap-2">
+                        <span class="badge badge-{{ $statusBadge }}">{{ ucfirst($sprint->status) }}</span>
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-gray-50 border border-gray-200 text-xs text-gray-600">
+                            Secuencia #{{ $sprint->sequence }}
+                        </span>
+                    </div>
+                    <span class="text-xs text-gray-500">Proyecto: {{ $project->name }}</span>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
@@ -58,8 +68,8 @@
 
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <p class="text-sm text-gray-600">Ítems asignados</p>
-                        <p class="text-gray-900">{{ $sprint->backlog_items_count }}</p>
+                        <p class="text-sm text-gray-600">Tareas vinculadas</p>
+                        <p class="text-gray-900">{{ $sprint->tasks_count }}</p>
                     </div>
                     <div>
                         <p class="text-sm text-gray-600">Estado operativo</p>
@@ -86,7 +96,7 @@
                     <div class="card-body">
                         <h3 class="text-sm font-semibold text-gray-900 mb-2">Iniciar sprint</h3>
                         <p class="text-xs text-gray-500 mb-4">
-                            Verifica que el backlog del sprint está listo antes de iniciar.
+                            Verifica que el trabajo del sprint está listo antes de iniciar.
                         </p>
                         <button type="submit" class="btn-primary w-full">Iniciar sprint</button>
                     </div>
@@ -108,6 +118,19 @@
                 </form>
             @endif
         @endcan
+        <div class="card">
+            <div class="card-body">
+                <h3 class="text-sm font-semibold text-gray-900 mb-2">Atajos</h3>
+                <div class="flex flex-col gap-2">
+                    @if($sprint->isPlanning())
+                        <a href="{{ route('tasks.index', $project) }}?sprint={{ $sprint->id }}#create-task" class="btn-secondary text-xs">Crear tareas</a>
+                    @endif
+                    <a href="{{ route('projects.scrum-board.index', $project) }}" class="btn-secondary text-xs">Abrir tablero</a>
+                    <a href="{{ route('tasks.index', $project) }}" class="btn-secondary text-xs">Ir a tareas</a>
+                    <a href="{{ route('projects.calendar.index', $project) }}" class="btn-secondary text-xs">Calendario</a>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 @endsection

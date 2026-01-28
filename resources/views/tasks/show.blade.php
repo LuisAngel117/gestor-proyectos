@@ -32,6 +32,7 @@
         return (int) $entry->user_id === (int) auth()->id() && $entry->stopped_at === null;
     });
     $requiresTimerForChecklist = !auth()->user()?->can('update', $task);
+    $taskFinished = $task->status === 'hecho';
 @endphp
 <div class="space-y-6">
     <div class="card">
@@ -65,7 +66,7 @@
                 </div>
                 <div>
                     <p class="text-sm text-gray-600">Sprint</p>
-                    <p class="text-sm text-gray-900">{{ $task->sprint?->name ?? 'Backlog' }}</p>
+                    <p class="text-sm text-gray-900">{{ $task->sprint?->name ?? 'No asignado' }}</p>
                 </div>
                 <div>
                     <p class="text-sm text-gray-600">Fecha limite</p>
@@ -80,38 +81,79 @@
                     <p class="text-sm text-gray-900">{{ $task->created_at->format('d/m/Y H:i') }}</p>
                 </div>
             </div>
+            <div class="mt-4 border-t pt-4">
+                <p class="text-xs text-gray-500 mb-1">Descripci&oacute;n</p>
+                <p class="text-sm text-gray-900">{{ $task->description ?: 'Sin descripción.' }}</p>
+            </div>
 
             @can('update', $task)
-                <form method="POST" action="{{ route('tasks.update', [$project, $task]) }}" class="grid grid-cols-1 md:grid-cols-4 gap-3 mt-6">
-                    @csrf
-                    @method('PATCH')
-                    <input type="hidden" name="project_id" value="{{ $project->id }}">
-                    <input type="text" name="title" value="{{ $task->title }}" class="form-input" required>
-                    <select name="status" class="form-input">
-                        @foreach($statuses as $key => $status)
-                            <option value="{{ $key }}" @selected($task->status === $key)>{{ $status['label'] }}</option>
-                        @endforeach
-                    </select>
-                    <select name="priority" class="form-input">
-                        @foreach($priorities as $priority)
-                            <option value="{{ $priority }}" @selected($task->priority === $priority)>{{ $priority }}</option>
-                        @endforeach
-                    </select>
-                    <select name="sprint_id" class="form-input">
-                        <option value="">Backlog</option>
-                        @foreach($sprints as $sprint)
-                            <option value="{{ $sprint->id }}" @selected((int) $task->sprint_id === (int) $sprint->id)>{{ $sprint->name }}</option>
-                        @endforeach
-                    </select>
-                    <input type="date" name="due_date" value="{{ $task->due_date?->format('Y-m-d') }}" class="form-input">
-                    <input type="number" name="estimated_hours" value="{{ $task->estimated_hours }}" step="0.01" min="0" class="form-input">
-                    <textarea name="description" class="form-input md:col-span-4" rows="2">{{ $task->description }}</textarea>
-                    <input type="hidden" name="backlog_item_id" value="{{ $task->backlog_item_id }}">
-                    <input type="hidden" name="parent_id" value="{{ $task->parent_id }}">
-                    <div class="md:col-span-4">
-                        <button type="submit" class="btn-primary">Actualizar tarea</button>
+                <div class="mt-6 border-t pt-5">
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                        <div>
+                            <h4 class="text-sm font-semibold text-gray-900">Editar tarea</h4>
+                            <p class="text-xs text-gray-500">Actualiza datos clave de la tarea.</p>
+                        </div>
+                        <span class="text-xs text-gray-400">Campos editables</span>
                     </div>
-                </form>
+                    <form method="POST" action="{{ route('tasks.update', [$project, $task]) }}" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        @csrf
+                        @method('PATCH')
+                        <input type="hidden" name="project_id" value="{{ $project->id }}">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">T&iacute;tulo</label>
+                            <input type="text" name="title" value="{{ $task->title }}" class="form-input w-full" required>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Estado</label>
+                            <select name="status" class="form-input w-full">
+                                @foreach($statuses as $key => $status)
+                                    <option value="{{ $key }}" @selected($task->status === $key)>{{ $status['label'] }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Prioridad</label>
+                            <select name="priority" class="form-input w-full">
+                                @foreach($priorities as $priority)
+                                    <option value="{{ $priority }}" @selected($task->priority === $priority)>{{ $priority }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Sprint</label>
+                            <select name="sprint_id" class="form-input w-full">
+                                <option value="">Sin asignar</option>
+                                @foreach($sprints as $sprint)
+                                    <option value="{{ $sprint->id }}" @selected((int) $task->sprint_id === (int) $sprint->id)>{{ $sprint->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Fecha l&iacute;mite</label>
+                            <input type="date" name="due_date" value="{{ $task->due_date?->format('Y-m-d') }}" class="form-input w-full"
+                                   @if($project->due_date) max="{{ $project->due_date->format('Y-m-d') }}" @endif>
+                            @if($project->due_date)
+                                <p class="text-xs text-amber-600 mt-1">No disponible despu&eacute;s de {{ $project->due_date->format('d/m/Y') }}.</p>
+                            @endif
+                            @error('due_date')
+                                <p class="form-error">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Horas estimadas</label>
+                            <input type="number" name="estimated_hours" value="{{ $task->estimated_hours }}" step="0.01" min="0" class="form-input w-full">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Descripci&oacute;n</label>
+                            <textarea name="description" class="form-input w-full min-h-[140px]" rows="4">{{ $task->description }}</textarea>
+                        </div>
+                        <input type="hidden" name="backlog_item_id" value="{{ $task->backlog_item_id }}">
+                        <input type="hidden" name="parent_id" value="{{ $task->parent_id }}">
+                        <div class="md:col-span-2 flex justify-end">
+                            <button type="submit" class="btn-primary">Actualizar tarea</button>
+                        </div>
+                    </form>
+                </div>
             @endcan
         </div>
     </div>
@@ -259,24 +301,27 @@
                         <form method="POST" action="{{ route('tasks.timer.start', [$project, $task]) }}"
                               @submit="if (!confirm('¿Iniciar el timer para esta tarea?')) { $event.preventDefault(); return; } starting = true;">
                             @csrf
-                            <button type="submit" class="btn-primary text-sm"
-                                    @disabled($activeTimerEntry)
+                            <button type="submit" class="btn-success text-sm"
+                                    @disabled($activeTimerEntry || $taskFinished)
                                     x-bind:disabled="starting"
                                     x-bind:class="starting ? 'opacity-60 cursor-not-allowed' : ''">
                                 Iniciar
                             </button>
                         </form>
                         <form method="POST" action="{{ route('tasks.timer.stop', [$project, $task]) }}"
-                              @submit="if (!confirm('Al detener el timer, la tarea se marcará como HECHA y no podrás revertirla fácilmente. ¿Deseas continuar?')) { $event.preventDefault(); return; } stopping = true;">
+                              @submit="if (!confirm('Al finalizar el timer, la tarea se marcará como HECHA y no podrás revertirla fácilmente. ¿Deseas continuar?')) { $event.preventDefault(); return; } stopping = true;">
                             @csrf
-                            <button type="submit" class="btn-secondary text-sm"
-                                    @disabled(!$activeTimerEntry)
+                            <button type="submit" class="btn-danger text-sm"
+                                    @disabled(!$activeTimerEntry || $taskFinished)
                                     x-bind:disabled="stopping"
                                     x-bind:class="stopping ? 'opacity-60 cursor-not-allowed' : ''">
-                                Detener
+                                Finalizar
                             </button>
                         </form>
                     </div>
+                    @if($taskFinished)
+                        <p class="text-xs text-gray-500 mt-2">La tarea est&aacute; finalizada. No puedes reiniciar el timer.</p>
+                    @endif
                 @else
                     <p class="text-sm text-gray-500">Solo lectura.</p>
                 @endcan

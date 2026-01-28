@@ -5,12 +5,33 @@
 @section('content')
 <div class="flex flex-wrap justify-between items-center gap-4 mb-6">
     <div>
+        <nav class="text-xs text-gray-500 mb-2">
+            <a href="{{ route('dashboard') }}" class="hover:text-primary-600">Inicio</a>
+            <span class="mx-1">/</span>
+            <a href="{{ route('projects.index') }}" class="hover:text-primary-600">Proyectos</a>
+            <span class="mx-1">/</span>
+            <span>{{ $project->name }}</span>
+        </nav>
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
             {{ $project->name }}
         </h2>
-        <p class="text-sm text-gray-600 mt-1">
-            Equipo: {{ $project->team->name }} - Creado por: {{ $project->creator->full_name }}
-        </p>
+        <div class="mt-2 flex flex-wrap items-center gap-2 text-xs text-gray-600">
+            <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-gray-50 border border-gray-200">
+                Equipo: {{ $project->team->name }}
+            </span>
+            <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-gray-50 border border-gray-200">
+                Creado por: {{ $project->creator->full_name }}
+            </span>
+            <span class="badge badge-{{ $project->priority_color }}">{{ $project->priority_label }}</span>
+            <span class="badge badge-{{ $project->status_color }}">{{ $project->status_label }}</span>
+            <span class="inline-flex items-center px-2.5 py-1 rounded-full {{ $pendingTasks === 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200' }} border">
+                {{ $pendingTasks === 0 ? 'Tareas al día' : 'Tareas pendientes: ' . $pendingTasks }}
+            </span>
+            <span class="inline-flex items-center px-2.5 py-1 rounded-full {{ $activeSprint ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-gray-50 text-gray-600 border-gray-200' }} border">
+                {{ $activeSprint ? 'Sprint activo' : 'Sin sprint activo' }}
+            </span>
+        </div>
+        <p class="text-xs text-gray-500 mt-2">Auto-completado: cuando la fecha de entrega llega y no quedan tareas pendientes ni sprint activo.</p>
     </div>
     <div class="flex flex-wrap gap-2">
         @can('update', $project)
@@ -33,14 +54,6 @@
             </svg>
             Tablero Scrum
         </a>
-        @can('create', [\App\Models\BacklogItem::class, $project])
-        <a href="{{ route('backlog.index', $project) }}" class="btn-secondary">
-            <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5h6M9 9h6M9 13h6M5 5h.01M5 9h.01M5 13h.01M5 17h.01M9 17h6"></path>
-            </svg>
-            Backlog
-        </a>
-        @endcan
         <a href="{{ route('tasks.index', $project) }}" class="btn-secondary">
             <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5h6M9 9h6M9 13h6M5 5h.01M5 9h.01M5 13h.01M5 17h.01M9 17h6"></path>
@@ -99,44 +112,30 @@
                     <a href="{{ route('sprints.create', $project) }}" class="btn-secondary text-xs">Crear sprint</a>
                 </li>
                 <li class="flex items-center justify-between">
-                    <div class="flex items-center gap-2">
-                        <span>3. Crear ítems en backlog</span>
-                        @if($project->backlog_items_count > 0)
-                            <span class="inline-flex items-center gap-1 text-xs font-medium text-emerald-600">
-                                <svg class="w-4 h-4 animate-pulse" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M16.704 5.293a1 1 0 010 1.414l-7.5 7.5a1 1 0 01-1.414 0l-3.5-3.5a1 1 0 111.414-1.414L8.5 12.086l6.793-6.793a1 1 0 011.411 0z" clip-rule="evenodd"/>
-                                </svg>
-                                Listo
-                            </span>
-                        @else
-                            <span class="text-xs text-gray-500">Pendiente</span>
-                        @endif
-                    </div>
-                    <a href="{{ route('backlog.create', $project) }}" class="btn-secondary text-xs">Nuevo ítem</a>
-                </li>
-                <li class="flex items-center justify-between">
-                    <span>4. Planificar sprint</span>
+                    <span>3. Crear tareas del sprint</span>
                     <div class="flex items-center gap-2">
                         @if($planningSprint)
-                            <a href="{{ route('sprints.plan', [$project, $planningSprint]) }}" class="btn-secondary text-xs">Planificar</a>
-                        @elseif($activeSprint)
-                            <span class="text-xs text-gray-500">El sprint activo ya está iniciado. Crea uno en planificación.</span>
+                            <a href="{{ route('tasks.index', $project) }}?sprint={{ $planningSprint->id }}#create-task" class="btn-secondary text-xs">Crear tareas</a>
+                        @elseif($project->sprints->count() > 0)
+                            <a href="{{ route('tasks.index', $project) }}#create-task" class="btn-secondary text-xs">Crear tareas</a>
                         @else
-                            <span class="text-xs text-gray-500">Crea un sprint en planificación</span>
+                            <span class="text-xs text-gray-500">Crea un sprint primero</span>
                         @endif
                     </div>
                 </li>
                 <li class="flex items-center justify-between">
-                    <span>5. Crear tareas</span>
+                    <span>4. Iniciar sprint</span>
                     <div class="flex items-center gap-2">
-                        <span class="badge {{ $project->tasks_count > 0 ? 'badge-success' : 'badge-warning' }}">
-                            {{ $project->tasks_count > 0 ? 'Listo' : 'Pendiente' }}
-                        </span>
-                        <a href="{{ route('tasks.index', $project) }}" class="btn-secondary text-xs">Ir a tareas</a>
+                        @if($activeSprint)
+                            <span class="badge badge-success">Listo</span>
+                        @else
+                            <span class="badge badge-warning">Pendiente</span>
+                        @endif
+                        <a href="{{ route('sprints.index', $project) }}" class="btn-secondary text-xs">Ir a sprints</a>
                     </div>
                 </li>
                 <li class="flex items-center justify-between">
-                    <span>6. Ejecutar en tablero Scrum</span>
+                    <span>5. Ejecutar en tablero Scrum</span>
                     <div class="flex items-center gap-2">
                         @if($activeSprint)
                             <a href="{{ route('projects.scrum-board.index', $project) }}" class="btn-secondary text-xs">Abrir tablero</a>
@@ -146,7 +145,7 @@
                     </div>
                 </li>
                 <li class="flex items-center justify-between">
-                    <span>7. Revisar calendario y dashboard</span>
+                    <span>6. Revisar calendario y dashboard</span>
                     <div class="flex items-center gap-2">
                         <a href="{{ route('projects.calendar.index', $project) }}" class="btn-secondary text-xs">Calendario</a>
                         <a href="{{ route('projects.dashboard.index', $project) }}" class="btn-secondary text-xs">Dashboard</a>
@@ -156,7 +155,6 @@
             <details class="mt-4 text-sm text-gray-600">
                 <summary class="cursor-pointer font-medium text-gray-700">Glosario r&aacute;pido</summary>
                 <ul class="mt-2 space-y-1 list-disc list-inside">
-                    <li><span class="font-semibold">Backlog</span>: tareas sin sprint.</li>
                     <li><span class="font-semibold">Sprint</span>: iteraci&oacute;n con tareas planificadas.</li>
                     <li><span class="font-semibold">Tablero</span>: ejecuci&oacute;n del sprint activo.</li>
                 </ul>
@@ -170,18 +168,15 @@
                 } elseif ($project->sprints->count() === 0) {
                     $nextProjectStepLabel = 'Crear primer sprint';
                     $nextProjectStepUrl = route('sprints.create', $project);
-                } elseif ($project->backlog_items_count === 0) {
-                    $nextProjectStepLabel = 'Crear primer &iacute;tem';
-                    $nextProjectStepUrl = route('backlog.create', $project);
-                } elseif ($planningSprint) {
-                    $nextProjectStepLabel = 'Planificar sprint';
-                    $nextProjectStepUrl = route('sprints.plan', [$project, $planningSprint]);
+                } elseif ($project->tasks_count === 0) {
+                    $targetSprintId = $planningSprint?->id;
+                    $nextProjectStepLabel = 'Crear tareas del sprint';
+                    $nextProjectStepUrl = $targetSprintId
+                        ? route('tasks.index', $project) . '?sprint=' . $targetSprintId . '#create-task'
+                        : route('tasks.index', $project) . '#create-task';
                 } elseif (!$activeSprint) {
                     $nextProjectStepLabel = 'Iniciar sprint';
                     $nextProjectStepUrl = route('sprints.index', $project);
-                } elseif ($project->tasks_count === 0) {
-                    $nextProjectStepLabel = 'Crear tareas';
-                    $nextProjectStepUrl = route('tasks.index', $project);
                 } else {
                     $nextProjectStepLabel = 'Abrir tablero';
                     $nextProjectStepUrl = route('projects.scrum-board.index', $project);
@@ -312,32 +307,37 @@
     <!-- Miembros del proyecto -->
     <div class="card" id="project-members">
         <div class="card-body">
-            <div class="flex flex-wrap justify-between items-center gap-3 mb-4">
-                <h3 class="text-lg font-semibold text-gray-900">Miembros del Proyecto</h3>
+            <div class="flex flex-wrap justify-between items-start gap-3 mb-4">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900">Miembros del Proyecto</h3>
+                    <p class="text-sm text-gray-600">Gestiona roles y permisos dentro del proyecto.</p>
+                </div>
                 @can('manageMembers', $project)
-                <div class="flex flex-wrap items-center gap-3">
-                    <form method="POST" action="{{ route('projects.members.store', $project) }}" class="flex flex-wrap items-end gap-2">
+                <div class="w-full lg:w-[560px]">
+                    <form method="POST" action="{{ route('projects.members.store', $project) }}" class="grid grid-cols-1 md:grid-cols-[1fr_180px_auto] gap-3 items-end">
                         @csrf
-                        <label for="new_member" class="text-sm text-gray-600">Agregar miembro</label>
-                        <select
-                            id="new_member"
-                            name="user_id"
-                            class="form-input text-sm"
-                            @disabled($availableMembers->isEmpty())
-                        >
-                            @foreach($availableMembers as $member)
-                                <option value="{{ $member->id }}">{{ $member->full_name }}</option>
-                            @endforeach
-                        </select>
-                        <div class="flex flex-col">
-                            <label for="new_member_role" class="text-xs text-gray-500">Rol en proyecto</label>
-                            <select id="new_member_role" name="role" class="form-input text-sm">
+                        <div>
+                            <label for="new_member" class="block text-xs font-medium text-gray-600 mb-1">Agregar miembro</label>
+                            <select
+                                id="new_member"
+                                name="user_id"
+                                class="form-input text-sm w-full min-w-[240px]"
+                                @disabled($availableMembers->isEmpty())
+                            >
+                                @foreach($availableMembers as $member)
+                                    <option value="{{ $member->id }}">{{ $member->full_name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label for="new_member_role" class="block text-xs font-medium text-gray-600 mb-1">Rol en proyecto</label>
+                            <select id="new_member_role" name="role" class="form-input text-sm w-full">
                                 <option value="admin">Administrador</option>
                                 <option value="member" selected>Miembro</option>
                                 <option value="observer">Observador</option>
                             </select>
                         </div>
-                        <button type="submit" class="btn-primary text-sm" @disabled($availableMembers->isEmpty())>Agregar</button>
+                        <button type="submit" class="btn-primary text-sm w-full md:w-auto" @disabled($availableMembers->isEmpty())>Agregar</button>
                     </form>
                 </div>
                 @endcan

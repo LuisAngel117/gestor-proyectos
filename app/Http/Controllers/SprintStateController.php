@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Project;
 use App\Models\Sprint;
+use App\Support\AuditLogger;
 use Illuminate\Http\RedirectResponse;
 
 class SprintStateController extends Controller
@@ -39,6 +40,9 @@ class SprintStateController extends Controller
             'status' => 'activo',
             'started_at' => now(),
         ]);
+        AuditLogger::log(request()->user(), 'sprint.start', $sprint, [
+            'project' => $project->name,
+        ]);
 
         return redirect()
             ->to(route('projects.show', $project) . '#project-assistant')
@@ -58,6 +62,9 @@ class SprintStateController extends Controller
         $sprint->update([
             'status' => 'cerrado',
             'closed_at' => now(),
+        ]);
+        AuditLogger::log(request()->user(), 'sprint.close', $sprint, [
+            'project' => $project->name,
         ]);
 
         return redirect()

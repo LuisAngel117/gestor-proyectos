@@ -7,6 +7,7 @@ use App\Models\Project;
 use App\Models\Task;
 use App\Services\Boards\ScrumBoardService;
 use App\Services\Tracking\TaskStatusTrackingService;
+use App\Support\AuditLogger;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -48,6 +49,10 @@ class ScrumBoardController extends Controller
 
         $payload = $request->validated();
         $this->trackingService->recordTransition($task, $payload['status'], $request->user());
+        AuditLogger::log($request->user(), 'task.move', $task, [
+            'project' => $project->name,
+            'status' => $payload['status'],
+        ]);
 
         return back()->with('success', 'Estado actualizado.');
     }
