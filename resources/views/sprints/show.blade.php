@@ -33,6 +33,15 @@
 
 @section('content')
 
+@if($autoStarted && $sprint->isActive())
+    <div class="card border border-emerald-200 bg-emerald-50">
+        <div class="card-body">
+            <p class="text-sm text-emerald-700 font-medium">
+                Sprint iniciado automáticamente al iniciar la primera tarea.
+            </p>
+        </div>
+    </div>
+@endif
 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     <div class="lg:col-span-2">

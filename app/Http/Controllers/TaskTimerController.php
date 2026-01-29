@@ -205,6 +205,13 @@ class TaskTimerController extends Controller
             'started_at' => $sprint->started_at ?? now(),
         ]);
 
+        if ($project->status === 'planificacion') {
+            $project->update(['status' => 'en_progreso']);
+            AuditLogger::log($actor, 'project.auto_progress', $project, [
+                'sprint_id' => $sprint->id,
+            ]);
+        }
+
         AuditLogger::log($actor, 'sprint.auto_start', $sprint, [
             'project' => $project->name,
             'task_id' => $task->id,

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreSprintRequest;
+use App\Models\AuditLog;
 use App\Models\Project;
 use App\Models\Sprint;
 use App\Support\AuditLogger;
@@ -77,6 +78,11 @@ class SprintController extends Controller
         return view('sprints.show', [
             'project' => $project,
             'sprint' => $sprint,
+            'autoStarted' => AuditLog::query()
+                ->where('action', 'sprint.auto_start')
+                ->where('auditable_type', $sprint->getMorphClass())
+                ->where('auditable_id', $sprint->id)
+                ->exists(),
         ]);
     }
 
