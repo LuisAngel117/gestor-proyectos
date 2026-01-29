@@ -99,7 +99,11 @@ class TaskPolicy
         }
 
         $projectRole = $user->roleInProject($task->project_id);
-        return $projectRole === 'member' && $this->isAssigned($user, $task);
+        if ($projectRole === 'member') {
+            return $this->isAssigned($user, $task);
+        }
+
+        return $projectRole === null && $this->isAssigned($user, $task);
     }
 
     public function trackTimeManual(User $user, Task $task): bool
