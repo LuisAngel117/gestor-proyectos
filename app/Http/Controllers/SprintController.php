@@ -55,7 +55,7 @@ class SprintController extends Controller
             'sequence' => $sequence,
             'start_date' => $data['start_date'],
             'end_date' => $data['end_date'],
-            'status' => $data['status'],
+            'status' => 'planificacion',
             'created_by' => Auth::id(),
         ]);
         AuditLogger::log($request->user(), 'sprint.create', $sprint, [

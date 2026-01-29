@@ -108,21 +108,13 @@
                 </div>
 
                 <div>
-                    <label for="status" class="form-label">Estado * <span class="ml-1 text-gray-400 cursor-help" title="Usa Planificación para definir el trabajo antes de iniciar">?</span></label>
-                    <select
-                        id="status"
-                        name="status"
-                        class="form-input w-full @error('status') border-red-500 @enderror"
-                        required
-                    >
-                        <option value="planificacion" @selected(old('status', 'planificacion') === 'planificacion')>Planificación</option>
-                        <option value="activo" @selected(old('status') === 'activo')>Activo</option>
-                        <option value="cerrado" @selected(old('status') === 'cerrado')>Cerrado</option>
-                    </select>
-                    @error('status')
-                        <p class="form-error">{{ $message }}</p>
-                    @enderror
-                </div>
+    <label class="form-label">Estado</label>
+    <div class="mt-1 inline-flex items-center gap-2 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold px-3 py-1">
+        Planificacion
+    </div>
+    <p class="text-xs text-gray-500 mt-2">Se define automaticamente al crear.</p>
+    <input type="hidden" name="status" value="planificacion">
+</div>
 
                 <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
                     <p class="text-sm text-blue-700">

@@ -66,6 +66,7 @@ class TaskTimerController extends Controller
         if ($task->status !== 'hecho' && $task->status !== 'en_progreso') {
             $this->trackingService->recordTransition($task, 'en_progreso', $request->user());
         }
+        $this->autoStartSprint($task, $request->user());
         AuditLogger::log($request->user(), 'timer.start', $task, [
             'project_id' => $project->id,
         ]);
@@ -176,5 +177,37 @@ class TaskTimerController extends Controller
                 $user->notify(new TaskTimerStartedNotification($task, $actorId));
             });
         });
+    }
+
+    private function autoStartSprint(Task $task, User $actor): void
+    {
+        $sprint = $task->sprint;
+        if (!$sprint || !$sprint->isPlanning()) {
+            return;
+        }
+
+        $project = $sprint->project;
+        if (!$project) {
+            return;
+        }
+
+        $hasOtherActive = $project->sprints()
+            ->where('status', 'activo')
+            ->where('id', '!=', $sprint->id)
+            ->exists();
+
+        if ($hasOtherActive) {
+            return;
+        }
+
+        $sprint->update([
+            'status' => 'activo',
+            'started_at' => $sprint->started_at ?? now(),
+        ]);
+
+        AuditLogger::log($actor, 'sprint.auto_start', $sprint, [
+            'project' => $project->name,
+            'task_id' => $task->id,
+        ]);
     }
 }
