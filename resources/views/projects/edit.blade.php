@@ -176,10 +176,13 @@
                 <div class="mb-6">
                     <label for="estimated_hours" class="form-label">Horas Estimadas</label>
                     <input
-                        type="number"
+                        type="text"
                         id="estimated_hours"
                         name="estimated_hours"
                         value="{{ old('estimated_hours', $project->estimated_hours) }}"
+                        inputmode="decimal"
+                        autocomplete="off"
+                        data-hour-input
                         class="form-input w-full @error('estimated_hours') border-red-500 @enderror"
                         step="0.01"
                         min="0"
@@ -188,6 +191,7 @@
                     @error('estimated_hours')
                         <p class="form-error">{{ $message }}</p>
                     @enderror
+                    <p class="text-xs text-rose-600 mt-1 hidden" data-hour-message>Solo horas.</p>
                 </div>
 
                 <!-- Botones de acción -->

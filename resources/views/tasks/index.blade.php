@@ -223,7 +223,10 @@
                             </div>
                             <div>
                                 <label class="block text-xs font-medium text-gray-600 mb-1">Horas estimadas</label>
-                                <input type="number" name="estimated_hours" step="0.01" min="0" class="form-input w-full" placeholder="Ej: 1.5">
+                                <input type="text" name="estimated_hours" inputmode="decimal" autocomplete="off"
+                                       data-hour-input
+                                       class="form-input w-full" placeholder="Ej: 1.5">
+                                <p class="text-xs text-rose-600 mt-1 hidden" data-hour-message>Solo horas.</p>
                                 <p class="text-xs text-gray-500 mt-1">Usado en reportes y burndown.</p>
                             </div>
                         </div>
@@ -282,9 +285,19 @@
                                         </span>
                                     </td>
                                     <td class="px-4 py-3 text-sm text-gray-600">{{ $task->assignees->count() }}</td>
-                                    <td class="px-4 py-3 text-sm text-gray-600">
-                                        <a href="{{ route('tasks.show', [$project, $task]) }}" class="btn-secondary text-xs">Ver</a>
-                                    </td>
+                                      <td class="px-4 py-3 text-sm text-gray-600">
+                                          <div class="flex flex-wrap items-center gap-2">
+                                              <a href="{{ route('tasks.show', [$project, $task]) }}" class="btn-secondary text-xs">Ver</a>
+                                              @can('delete', $task)
+                                                  <form method="POST" action="{{ route('tasks.destroy', [$project, $task]) }}"
+                                                        onsubmit="return confirm('¿Eliminar esta tarea? Esta acción no se puede deshacer.');">
+                                                      @csrf
+                                                      @method('DELETE')
+                                                      <button type="submit" class="btn-danger text-xs">Eliminar</button>
+                                                  </form>
+                                              @endcan
+                                          </div>
+                                      </td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -338,9 +351,19 @@
                                         </span>
                                     </td>
                                     <td class="px-4 py-3 text-sm text-gray-600">{{ $task->assignees->count() }}</td>
-                                    <td class="px-4 py-3 text-sm text-gray-600">
-                                        <a href="{{ route('tasks.show', [$project, $task]) }}" class="btn-secondary text-xs">Ver</a>
-                                    </td>
+                                      <td class="px-4 py-3 text-sm text-gray-600">
+                                          <div class="flex flex-wrap items-center gap-2">
+                                              <a href="{{ route('tasks.show', [$project, $task]) }}" class="btn-secondary text-xs">Ver</a>
+                                              @can('delete', $task)
+                                                  <form method="POST" action="{{ route('tasks.destroy', [$project, $task]) }}"
+                                                        onsubmit="return confirm('¿Eliminar esta tarea? Esta acción no se puede deshacer.');">
+                                                      @csrf
+                                                      @method('DELETE')
+                                                      <button type="submit" class="btn-danger text-xs">Eliminar</button>
+                                                  </form>
+                                              @endcan
+                                          </div>
+                                      </td>
                                 </tr>
                             @endforeach
                         </tbody>

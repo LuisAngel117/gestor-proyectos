@@ -15,22 +15,44 @@
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
             {{ $project->name }}
         </h2>
-        <div class="mt-2 flex flex-wrap items-center gap-2 text-xs text-gray-600">
-            <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-gray-50 border border-gray-200">
-                Equipo: {{ $project->team->name }}
-            </span>
-            <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-gray-50 border border-gray-200">
-                Creado por: {{ $project->creator->full_name }}
-            </span>
-            <span class="badge badge-{{ $project->priority_color }}">{{ $project->priority_label }}</span>
-            <span class="badge badge-{{ $project->status_color }}">{{ $project->status_label }}</span>
-            <span class="inline-flex items-center px-2.5 py-1 rounded-full {{ $pendingTasks === 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200' }} border">
-                {{ $pendingTasks === 0 ? 'Tareas al día' : 'Tareas pendientes: ' . $pendingTasks }}
-            </span>
-            <span class="inline-flex items-center px-2.5 py-1 rounded-full {{ $activeSprint ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-gray-50 text-gray-600 border-gray-200' }} border">
-                {{ $activeSprint ? 'Sprint activo' : 'Sin sprint activo' }}
-            </span>
-        </div>
+            <div class="mt-2 flex flex-wrap items-center gap-2 text-xs text-gray-600">
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-50 text-slate-600 border border-slate-200">
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M5 7v10a2 2 0 002 2h10a2 2 0 002-2V7M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2" />
+                    </svg>
+                    Equipo: {{ $project->team->name }}
+                </span>
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-50 text-slate-600 border border-slate-200">
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c1.657 0 3-1.343 3-3S13.657 5 12 5 9 6.343 9 8s1.343 3 3 3zm-6 8a6 6 0 0112 0" />
+                    </svg>
+                    Creado por: {{ $project->creator->full_name }}
+                </span>
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v18m0 0l-4-4m4 4l4-4" />
+                    </svg>
+                    {{ $project->priority_label }}
+                </span>
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-sky-50 text-sky-700 border border-sky-200">
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    {{ $project->status_label }}
+                </span>
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full {{ $pendingTasks === 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200' }} border">
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5h6m-6 4h6m-7 4h7m-7 4h5" />
+                    </svg>
+                    {{ $pendingTasks === 0 ? 'Tareas al dia' : 'Pendientes: ' . $pendingTasks }}
+                </span>
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full {{ $activeSprint ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-gray-50 text-gray-600 border-gray-200' }} border">
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v18l14-9L5 3z" />
+                    </svg>
+                    {{ $activeSprint ? 'Sprint activo' : 'Sin sprint activo' }}
+                </span>
+            </div>
         <p class="text-xs text-gray-500 mt-2">Auto-completado: cuando la fecha de entrega llega y no quedan tareas pendientes ni sprint activo.</p>
     </div>
     <div class="flex flex-wrap gap-2">

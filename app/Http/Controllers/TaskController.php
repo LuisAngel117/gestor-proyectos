@@ -6,6 +6,7 @@ use App\Http\Requests\Task\StoreTaskRequest;
 use App\Http\Requests\Task\UpdateTaskRequest;
 use App\Models\Project;
 use App\Models\Task;
+use App\Models\TaskTimeEntry;
 use App\Models\TaskStatusEvent;
 use App\Services\Boards\ScrumBoardService;
 use App\Services\Tracking\TaskStatusTrackingService;
@@ -184,15 +185,40 @@ class TaskController extends Controller
             'dependents:id,title',
         ]);
 
-        return view('tasks.show', [
-            'project' => $project,
-            'task' => $task,
-            'statuses' => ScrumBoardService::STATUSES,
-            'priorities' => ['baja', 'media', 'alta', 'urgente'],
-            'sprints' => $project->sprints()->orderByDesc('start_date')->get(),
-            'members' => $project->members()->orderBy('name')->get(),
-            'availableTasks' => Task::query()
-                ->where('project_id', $project->id)
+          $viewer = request()->user();
+          $activeTimerEntry = TaskTimeEntry::query()
+            ->where('task_id', $task->id)
+            ->where('user_id', $viewer->id)
+            ->whereNull('stopped_at')
+            ->latest('started_at')
+            ->first();
+
+          $activeTimerForUser = TaskTimeEntry::query()
+            ->where('user_id', $viewer->id)
+            ->whereNull('stopped_at')
+            ->with(['task:id,title,project_id', 'task.project:id,name'])
+            ->latest('started_at')
+            ->first();
+          $hasActiveTimerEntry = $activeTimerEntry !== null;
+
+          $assignedIds = $task->assignees->pluck('id')->map(fn ($id) => (int) $id)->all();
+          $availableMembers = $project->members()
+              ->whereNotIn('users.id', $assignedIds)
+              ->orderBy('name')
+              ->get();
+
+          return view('tasks.show', [
+              'project' => $project,
+              'task' => $task,
+              'statuses' => ScrumBoardService::STATUSES,
+              'priorities' => ['baja', 'media', 'alta', 'urgente'],
+              'sprints' => $project->sprints()->orderByDesc('start_date')->get(),
+              'members' => $availableMembers,
+              'activeTimerEntry' => $activeTimerEntry,
+              'hasActiveTimerEntry' => $hasActiveTimerEntry,
+              'activeTimerForUser' => $activeTimerForUser,
+              'availableTasks' => Task::query()
+                  ->where('project_id', $project->id)
                 ->where('id', '!=', $task->id)
                 ->orderBy('title')
                 ->get(),
@@ -257,7 +283,7 @@ class TaskController extends Controller
         $this->authorize('delete', $task);
 
         $task->delete();
-        AuditLogger::log($request->user(), 'task.delete', $task, [
+        AuditLogger::log(request()->user(), 'task.delete', $task, [
             'project' => $project->name,
         ]);
 

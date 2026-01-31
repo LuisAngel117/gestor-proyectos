@@ -65,5 +65,44 @@
             @include('components.footer')
         </div>
     </div>
+    <script>
+        document.addEventListener('input', (event) => {
+            const target = event.target;
+            if (!target || !target.matches('[data-hour-input]')) {
+                return;
+            }
+
+            const original = target.value;
+            let sanitized = original.replace(/[^0-9.]/g, '');
+            const parts = sanitized.split('.');
+            if (parts.length > 2) {
+                sanitized = parts[0] + '.' + parts.slice(1).join('');
+            }
+            const finalParts = sanitized.split('.');
+            if (finalParts.length === 2) {
+                finalParts[1] = finalParts[1].slice(0, 2);
+                sanitized = finalParts[0] + '.' + finalParts[1];
+            }
+
+            if (sanitized !== original) {
+                target.value = sanitized;
+                const message = target.parentElement?.querySelector('[data-hour-message]');
+                if (message) {
+                    message.classList.remove('hidden');
+                }
+            }
+        });
+
+        document.addEventListener('blur', (event) => {
+            const target = event.target;
+            if (!target || !target.matches('[data-hour-input]')) {
+                return;
+            }
+            const message = target.parentElement?.querySelector('[data-hour-message]');
+            if (message) {
+                message.classList.add('hidden');
+            }
+        }, true);
+    </script>
 </body>
 </html>

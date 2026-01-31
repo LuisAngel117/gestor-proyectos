@@ -28,9 +28,9 @@
 
 @section('content')
 @php
-    $activeTimerEntry = $task->timeEntries->first(function ($entry) {
-        return (int) $entry->user_id === (int) auth()->id() && $entry->stopped_at === null;
-    });
+    $activeOtherTimer = $activeTimerForUser
+        && (int) $activeTimerForUser->task_id !== (int) $task->id;
+    $hasActiveTimerEntry = $hasActiveTimerEntry ?? ($activeTimerEntry !== null);
     $requiresTimerForChecklist = !auth()->user()?->can('update', $task);
     $taskFinished = $task->status === 'hecho';
 @endphp
@@ -141,7 +141,9 @@
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-gray-600 mb-1">Horas estimadas</label>
-                            <input type="number" name="estimated_hours" value="{{ $task->estimated_hours }}" step="0.01" min="0" class="form-input w-full">
+                            <input type="text" name="estimated_hours" value="{{ $task->estimated_hours }}" inputmode="decimal" autocomplete="off"
+                                   data-hour-input class="form-input w-full">
+                            <p class="text-xs text-rose-600 mt-1 hidden" data-hour-message>Solo horas.</p>
                         </div>
                         <div class="md:col-span-2">
                             <label class="block text-xs font-medium text-gray-600 mb-1">Descripci&oacute;n</label>
@@ -296,13 +298,27 @@
             <div class="card-body" x-data="{starting: false, stopping: false}">
                 <h3 class="text-sm font-semibold text-gray-900 mb-3">Timer</h3>
                 <p class="text-xs text-gray-500 mb-3">Inicia y det&eacute;n para registrar tiempo real.</p>
+                @if($errors->has('timer'))
+                    <div class="mb-3 rounded border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
+                        {{ $errors->first('timer') }}
+                    </div>
+                @endif
+                @if($activeOtherTimer)
+                    <div class="mb-3 rounded border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
+                        Ya tienes un timer activo en otra tarea:
+                        <a class="font-semibold underline" href="{{ route('tasks.show', [$activeTimerForUser->task->project, $activeTimerForUser->task]) }}">
+                            {{ $activeTimerForUser->task->title }}
+                        </a>
+                        ({{ $activeTimerForUser->task->project?->name ?? 'Proyecto' }}).
+                    </div>
+                @endif
                 @can('trackTime', $task)
                     <div class="flex gap-2">
                         <form method="POST" action="{{ route('tasks.timer.start', [$project, $task]) }}"
                               @submit="if (!confirm('¿Iniciar el timer para esta tarea?')) { $event.preventDefault(); return; } starting = true;">
                             @csrf
                             <button type="submit" class="btn-success text-sm"
-                                    @disabled($activeTimerEntry || $taskFinished)
+                                    @disabled($hasActiveTimerEntry || $activeOtherTimer || $taskFinished)
                                     x-bind:disabled="starting"
                                     x-bind:class="starting ? 'opacity-60 cursor-not-allowed' : ''">
                                 Iniciar
@@ -312,7 +328,7 @@
                               @submit="if (!confirm('Al finalizar el timer, la tarea se marcará como HECHA y no podrás revertirla fácilmente. ¿Deseas continuar?')) { $event.preventDefault(); return; } stopping = true;">
                             @csrf
                             <button type="submit" class="btn-danger text-sm"
-                                    @disabled(!$activeTimerEntry || $taskFinished)
+                                    @disabled(!$hasActiveTimerEntry || $taskFinished)
                                     x-bind:disabled="stopping"
                                     x-bind:class="stopping ? 'opacity-60 cursor-not-allowed' : ''">
                                 Finalizar
