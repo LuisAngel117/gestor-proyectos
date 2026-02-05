@@ -30,6 +30,7 @@ use App\Http\Controllers\TaskTimerController;
 use App\Http\Controllers\TimeAggregationController;
 use App\Http\Controllers\ScrumBoardController;
 use App\Http\Controllers\TeamMemberController;
+use App\Http\Controllers\UserReportController;
 use App\Models\Project;
 use App\Models\Team;
 use App\Models\User;
@@ -97,13 +98,20 @@ Route::middleware('auth')->group(function () {
         Route::delete('/profile/account', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // Rutas de perfil extendido (datos adicionales del usuario)
-        Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'show'])->name('profile.show');
-        Route::get('/profile/edit', [\App\Http\Controllers\ProfileController::class, 'edit'])
+    Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'show'])->name('profile.show');
+    Route::get('/profile/edit', [\App\Http\Controllers\ProfileController::class, 'edit'])
         ->middleware('password.confirm')
         ->name('profile.edit.extended');
-        Route::put('/profile', [\App\Http\Controllers\ProfileController::class, 'update'])
+    Route::put('/profile', [\App\Http\Controllers\ProfileController::class, 'update'])
         ->middleware('password.confirm')
         ->name('profile.update.extended');
+
+    Route::get('/mis-reportes', [UserReportController::class, 'index'])
+        ->name('reports.index');
+    Route::get('/mis-reportes/historial.pdf', [UserReportController::class, 'exportHistoryPdf'])
+        ->name('reports.history');
+    Route::get('/mis-reportes/perfil.pdf', [UserReportController::class, 'exportProfilePdf'])
+        ->name('reports.profile');
 
     // Admin (superadmin)
         Route::prefix('admin')->name('admin.')->group(function () {

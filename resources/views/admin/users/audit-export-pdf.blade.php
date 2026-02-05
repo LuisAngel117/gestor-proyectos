@@ -19,6 +19,12 @@
     <h1>Historial de {{ $user->full_name }}</h1>
     <div class="meta muted">
         Generado: {{ $generatedAt->format('Y-m-d H:i') }}
+        <div>
+            Filtros:
+            Tipo {{ $filters['type'] ?? 'all' }},
+            Acción {{ $filters['action'] ?? 'all' }},
+            Rango {{ $filters['range'] ?? 'all' }}
+        </div>
     </div>
     <table>
         <thead>

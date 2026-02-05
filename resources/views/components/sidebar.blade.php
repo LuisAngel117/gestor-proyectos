@@ -58,6 +58,14 @@
             </svg>
             Mi perfil
         </a>
+        @if(Auth::check())
+            <a href="{{ route('reports.index') }}" class="app-sidebar-link {{ request()->routeIs('reports.*') ? 'active' : '' }}">
+                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-6h6v6m-8 4h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                Mis reportes
+            </a>
+        @endif
 
         @if(Auth::user()->isSuperadmin())
             <div class="pt-4 mt-4 border-t border-white/10 space-y-2">
